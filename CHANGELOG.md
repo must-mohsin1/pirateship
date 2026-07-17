@@ -1,0 +1,18 @@
+# Changelog
+
+All notable changes to Pirate Network are documented in this file.
+
+## [0.1.0.0] - 2026-07-17
+
+### Added
+
+- Supporters can rehearse a 30-day refundable pre-order on Polygon Amoy, review public release evidence, approve individually, or reclaim an unapproved pledge after the deadline.
+- Approved wallets can verify ownership with a one-use signature and retrieve one stable product key from the integrated service.
+- Project administrators can record release evidence from the owner wallet and load private key inventory through an authenticated API.
+- Automated contract, wallet-flow, API, persistence, configuration, and browser behavior checks now run in CI.
+
+### Changed
+
+- The landing page now explains the exact approval and refund process, shows live on-chain state, and reveals product-key access only after approval.
+- The landing page and key service are served from one origin with security headers, bounded ephemeral state and verification concurrency, RPC timeouts, restricted database permissions, and a startup check that prevents contract-address drift.
+- Ambiguous wallet-provider responses are persisted and block duplicate value-moving actions until the on-chain result can be reconciled.

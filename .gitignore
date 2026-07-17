@@ -1,2 +1,13 @@
 .DS_Store
 node_modules/
+.env
+.env.*
+!.env.example
+!.env.amoy.example
+data/
+*.db
+*.db-shm
+*.db-wal
+coverage/
+dist/
+.hallmark/

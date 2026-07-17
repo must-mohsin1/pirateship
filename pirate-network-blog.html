@@ -1,41 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Pirate Network is an AI-native talent network with a 30-day refundable Polygon pre-order.">
 <title>Pirate Network — a voyage journal</title>
+<link rel="stylesheet" href="tokens.css">
 <style>
+  /* Hallmark · genre: atmospheric · macrostructure: Long Document · theme: Midnight
+   * audience: Product Hunt early supporters · use: 0.01 test POL Amoy rehearsal with post-approval key access
+   * tone: editorial, trust-first · enrichment: existing background video
+   * nav: N3 Side rail · footer: Ft2 Inline single line
+   * pre-emit critique: P5 H5 E5 S5 R5 V5 · contrast: pass (40–41)
+   * slop: pass (42–45) · honest: pass (46) · chrome: pass (47) · tokens: pass (48)
+   * responsive: pass (49) · icons: pass (30) · mobile: pass (34, 49, 50–57)
+   */
   /* Dark only — the page ignores the OS/viewer light preference by design. */
-  :root { color-scheme: dark; --paper:#151f28; --edge: rgba(210,180,120,0.20); --ink:#f0e8d6; --ink-soft:#b6a884; --accent:#e0ac52; --label:#9d8a63; --shadow: rgba(0,0,0,0.55); }
-
   * { box-sizing:border-box; }
-  html { scroll-behavior:smooth; }
-  body { margin:0; color:var(--ink); font-family:system-ui,-apple-system,sans-serif; line-height:1.65; font-size:17px; }
-  .serif { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif; }
-  .mono  { font-family:ui-monospace,"SF Mono",Menlo,monospace; }
+  html { scroll-behavior:smooth; overflow-x:clip; }
+  body { margin:0; color:var(--ink); font-family:var(--font-body); line-height:1.65; font-size:17px; overflow-x:clip; }
+  button, input { color:inherit; font:inherit; }
+  .serif { font-family:var(--font-display); }
+  .mono  { font-family:var(--font-mono); }
 
-  #sea { position:fixed; inset:0; width:100vw; height:100vh; object-fit:cover; z-index:-2; display:block; background:#0a3d5e; }
+  #sea { position:fixed; inset:0; width:100%; height:100dvh; object-fit:cover; z-index:-2; display:block; background:var(--color-sea); }
   /* legibility scrim: darkens the hero text zone (left) and the top/bottom bands,
      while keeping the ship and horizon (center) clear */
   .scrim { position:fixed; inset:0; z-index:-1; pointer-events:none;
     background:
-      linear-gradient(90deg, rgba(6,18,32,.46) 0%, rgba(6,18,32,.14) 40%, rgba(6,18,32,0) 66%),
-      linear-gradient(180deg, rgba(6,18,32,.34) 0%, rgba(6,18,32,0) 24%, rgba(6,18,32,.08) 58%, rgba(6,18,32,.62) 100%); }
+      linear-gradient(90deg, var(--color-overlay-soft) 0%, var(--color-overlay-light) 40%, var(--color-overlay-clear) 66%),
+      linear-gradient(180deg, var(--color-overlay-top) 0%, var(--color-overlay-clear) 24%, var(--color-overlay-mid) 58%, var(--color-overlay-deep) 100%); }
 
-  .shell { max-width:780px; margin:0 auto; padding:0 22px; }
+  .shell { max-width:780px; margin:0 auto; padding:0 var(--space-lg); }
 
-  .masthead { padding:26px 0 0; display:flex; align-items:baseline; justify-content:space-between; gap:18px; flex-wrap:wrap; }
-  .brand { font-size:13px; letter-spacing:3px; text-transform:uppercase; color:#fbf3df; text-shadow:0 1px 5px rgba(8,25,40,.8); }
-  .brand b { color:#ffd76a; }
-  .masthead nav { display:flex; gap:20px; }
-  .masthead a { font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#fbf3df; text-decoration:none; opacity:.92; text-shadow:0 1px 5px rgba(8,25,40,.8); }
-  .masthead a:hover { color:#ffd76a; }
+  .masthead { padding:var(--space-lg) 0 0; display:flex; align-items:baseline; justify-content:space-between; gap:var(--space-md); flex-wrap:wrap; }
+  .brand { font-size:13px; letter-spacing:3px; text-transform:uppercase; color:var(--color-ink-bright); text-shadow:0 1px 5px var(--color-shadow); }
+  .brand b { color:var(--color-accent-strong); }
+  .masthead nav { display:flex; gap:var(--space-md); }
+  .masthead a { font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--color-ink-bright); text-decoration:none; opacity:.92; text-shadow:0 1px 5px var(--color-shadow); }
+  .masthead a:hover { color:var(--color-accent-strong); }
 
-  .hero { min-height:80vh; display:flex; flex-direction:column; justify-content:center; padding:40px 0; }
-  .hero .kicker { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:#fbf3df; opacity:.95; margin-bottom:18px; text-shadow:0 1px 6px rgba(8,25,40,.8); }
-  .hero h1 { font-size:clamp(42px,7.4vw,74px); line-height:1.02; font-weight:600; margin:0; color:#fff; letter-spacing:-0.8px; text-wrap:balance; max-width:14ch; text-shadow:0 1px 2px rgba(6,18,32,.6), 0 3px 30px rgba(6,18,32,.42); }
-  .hero p { margin:26px 0 0; max-width:46ch; font-size:19px; color:#fbf3df; opacity:.97; text-shadow:0 1px 3px rgba(6,18,32,.8); }
-  .cue { margin-top:44px; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#fbf3df; opacity:.9; display:flex; align-items:center; gap:10px; text-shadow:0 1px 6px rgba(6,18,32,.8); }
+  .hero { min-height:80vh; display:flex; flex-direction:column; justify-content:center; padding:var(--space-xl) 0 var(--space-2xl); }
+  .hero .kicker { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--color-ink-bright); opacity:.95; margin-bottom:18px; text-shadow:0 1px 6px var(--color-shadow); }
+  .hero h1 { min-width:0; overflow-wrap:anywhere; font-size:var(--text-display); line-height:1.02; font-weight:600; font-style:normal; margin:0; color:var(--color-ink-bright); letter-spacing:-0.8px; text-wrap:balance; max-width:14ch; text-shadow:0 1px 2px var(--color-shadow), 0 3px 30px var(--color-shadow); }
+  .hero p { margin:var(--space-lg) 0 0; max-width:46ch; font-size:19px; color:var(--color-ink-bright); opacity:.97; text-shadow:0 1px 3px var(--color-shadow); }
+  .cue { margin-top:var(--space-xl); font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--color-ink-bright); opacity:.9; display:flex; align-items:center; gap:var(--space-sm); text-shadow:0 1px 6px var(--color-shadow); }
   .cue .line { width:46px; height:1px; background:currentColor; }
 
-  .post { background:var(--paper); border:1px solid var(--edge); border-radius:5px; padding:46px 50px 50px; box-shadow:0 26px 74px var(--shadow), inset 0 1px 0 rgba(255,255,255,.28); margin-bottom:9vh; }
-  .post > h2 { display:flex; align-items:center; gap:15px; font-size:24px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); margin:0 0 30px; font-family:ui-monospace,"SF Mono",Menlo,monospace; font-weight:700; }
+  .post { background:var(--paper); border:1px solid var(--edge); border-radius:5px; padding:calc(var(--space-xl) + var(--space-xs)); box-shadow:0 26px 74px var(--shadow), inset 0 1px 0 var(--color-edge); margin-bottom:var(--space-3xl); }
+  .post > h2 { display:flex; align-items:center; gap:var(--space-md); font-size:24px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); margin:0 0 calc(var(--space-lg) + var(--space-xs)); font-family:var(--font-mono); font-style:normal; font-weight:700; }
   .post > h2::before { content:""; width:9px; height:9px; background:var(--accent); border-radius:2px; flex:none; box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
   .post > h2::after { content:""; flex:1; height:1px; background:var(--edge); }
   .post > h2.in { animation:h2pop .55s cubic-bezier(.2,.8,.2,1) both; }
@@ -47,78 +60,173 @@
   .matrix-wrap { overflow-x:auto; }
   .matrix { display:grid; grid-template-columns:minmax(172px,1.05fr) repeat(2,minmax(118px,1fr)); min-width:520px; }
 
-  .mx-h { padding:0 20px 12px; border-bottom:1px solid var(--edge); align-self:end; font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:11px; letter-spacing:2.5px; text-transform:uppercase; color:var(--label); }
+  .mx-h { padding:0 20px 12px; border-bottom:1px solid var(--edge); align-self:end; font-family:var(--font-mono); font-size:11px; letter-spacing:2.5px; text-transform:uppercase; color:var(--label); }
   .mx-h.col { border-left:1px solid var(--edge); }
 
-  .stem { padding:20px 20px; display:flex; flex-direction:column; justify-content:center; gap:9px; }
-  .stem .era { font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); }
+  .stem { padding:20px; display:flex; flex-direction:column; justify-content:center; gap:var(--space-xs); }
+  .stem .era { font-family:var(--font-mono); font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); }
   .stem .lin { font-size:15px; color:var(--ink-soft); line-height:1.5; letter-spacing:.2px; }
   .stem .lin b { color:var(--ink); font-weight:600; }
 
-  .seat { padding:20px 20px; border-left:1px solid var(--edge); display:flex; flex-direction:column; justify-content:center; gap:5px; }
-  .seat .who { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif; font-size:22px; font-weight:600; letter-spacing:-0.3px; line-height:1.04; color:var(--ink); }
-  .seat .tag { font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--label); }
+  .seat { padding:20px; border-left:1px solid var(--edge); display:flex; flex-direction:column; justify-content:center; gap:var(--space-2xs); }
+  .seat .who { font-family:var(--font-display); font-size:22px; font-weight:600; letter-spacing:-0.3px; line-height:1.04; color:var(--ink); }
+  .seat .tag { font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--label); }
 
   .ag { border-top:1px solid var(--edge); }
   .seat.open { background:color-mix(in srgb, var(--accent) 9%, transparent); }
   .seat.open .who { color:var(--accent); }
   .seat.empty .who { color:var(--ink-soft); opacity:.42; }
 
-  .mx-cap { margin:28px 0 0; font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-style:italic; font-size:17px; line-height:1.5; color:var(--ink-soft); }
+  .mx-cap { margin:28px 0 0; font-family:var(--font-display); font-style:italic; font-size:17px; line-height:1.5; color:var(--ink-soft); }
   .mx-cap .mark { font-style:normal; color:var(--accent); font-weight:600; }
 
   .post > h2:not(:first-of-type) { margin-top:48px; }
-  .lead { font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-size:clamp(21px,2.6vw,25px); line-height:1.4; letter-spacing:-0.2px; color:var(--ink); margin:0; text-wrap:pretty; }
+  .lead { font-family:var(--font-display); font-size:clamp(21px,2.6vw,25px); line-height:1.4; letter-spacing:-0.2px; color:var(--ink); margin:0; text-wrap:pretty; }
   .lead b { color:var(--accent); font-weight:600; }
   .lead .muted { color:var(--ink-soft); }
-  .pull { margin:46px 0 0; padding:6px 0 6px 26px; border-left:3px solid var(--accent); font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-size:clamp(25px,3.6vw,33px); line-height:1.2; letter-spacing:-0.5px; font-weight:600; color:var(--ink); text-wrap:balance; }
+  .pull { margin:calc(var(--space-xl) + var(--space-xs)) 0 0; padding:var(--space-xs) 0 var(--space-xs) var(--space-lg); border-left:3px solid var(--accent); font-family:var(--font-display); font-size:clamp(25px,3.6vw,33px); line-height:1.2; letter-spacing:-0.5px; font-weight:600; color:var(--ink); text-wrap:balance; }
   .pull b { color:var(--accent); font-weight:600; }
-  .vision { margin:30px 0 0; padding-top:26px; border-top:1px solid var(--edge); font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-size:clamp(18px,2.2vw,21px); line-height:1.46; color:var(--ink); }
+  .vision { margin:calc(var(--space-lg) + var(--space-xs)) 0 0; padding-top:var(--space-lg); border-top:1px solid var(--edge); font-family:var(--font-display); font-size:clamp(18px,2.2vw,21px); line-height:1.46; color:var(--ink); }
   .vision b { color:var(--accent); font-weight:600; }
-  .sides { display:grid; grid-template-columns:1fr 1fr; margin:26px 0 0; border-top:1px solid var(--edge); }
-  .side { padding:22px 0; }
+  .sides { display:grid; grid-template-columns:1fr 1fr; margin:var(--space-lg) 0 0; border-top:1px solid var(--edge); }
+  .side { padding:var(--space-lg) 0; }
   .side:first-child { padding-right:34px; }
   .side:last-child { padding-left:34px; border-left:1px solid var(--edge); }
   .side-h { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:12px; }
   .side p { margin:0; font-size:16px; line-height:1.62; color:var(--ink-soft); }
-  .body-p { margin:26px 0 0; font-size:16.5px; line-height:1.66; color:var(--ink-soft); max-width:66ch; }
-  .promises { list-style:none; margin:22px 0 0; padding:0; border-top:1px solid var(--edge); }
+  .body-p { margin:var(--space-lg) 0 0; font-size:16.5px; line-height:1.66; color:var(--ink-soft); max-width:66ch; }
+  .promises { list-style:none; margin:var(--space-lg) 0 0; padding:0; border-top:1px solid var(--edge); }
   .promises li { padding:16px 2px; border-bottom:1px solid var(--edge); font-size:16.5px; line-height:1.6; color:var(--ink); }
   .promises .k { color:var(--accent); font-weight:600; }
   .diffs { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--edge); border:1px solid var(--edge); border-radius:4px; overflow:hidden; margin:24px 0 0; }
-  .diff { background:var(--paper); padding:24px 26px; }
-  .diff h3 { position:relative; padding-top:15px; font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-size:19px; font-weight:600; letter-spacing:-0.2px; margin:0 0 8px; color:var(--ink); }
+  .diff { background:var(--paper); padding:var(--space-lg); }
+  .diff h3 { position:relative; padding-top:var(--space-md); font-family:var(--font-display); font-style:normal; font-size:19px; font-weight:600; letter-spacing:-0.2px; margin:0 0 var(--space-xs); color:var(--ink); }
   .diff h3::before { content:""; position:absolute; top:0; left:0; width:22px; height:2px; background:var(--accent); }
   .diff p { margin:0; font-size:15.5px; line-height:1.56; color:var(--ink-soft); }
   .works { margin:24px 0 0; font-size:16.5px; color:var(--ink-soft); }
-  .does { list-style:none; margin:14px 0 0; padding:0; border-top:1px solid var(--edge); }
-  .does li { padding:14px 2px; border-bottom:1px solid var(--edge); font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-size:18px; color:var(--ink); }
+  .does { list-style:none; margin:var(--space-md) 0 0; padding:0; border-top:1px solid var(--edge); }
+  .does li { padding:var(--space-md) var(--space-3xs); border-bottom:1px solid var(--edge); font-family:var(--font-display); font-size:18px; color:var(--ink); }
   .does .v { font-weight:600; color:var(--accent); letter-spacing:.2px; }
 
   /* left section rail — highlights the current heading on scroll */
-  .toc { position:fixed; left:30px; top:50%; transform:translateY(-50%); z-index:5; display:flex; flex-direction:column; gap:14px; padding:20px 22px; background:rgba(8,22,38,.58); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.16); border-radius:13px; box-shadow:0 16px 40px rgba(6,18,32,.5); }
-  .toc-h { font-size:9.5px; letter-spacing:2.5px; text-transform:uppercase; color:#ffd76a; opacity:.85; margin-bottom:3px; }
-  .toc a { display:flex; align-items:center; gap:11px; font-size:11.5px; letter-spacing:1.6px; text-transform:uppercase; color:#f4ecdc; opacity:.8; text-decoration:none; transition:opacity .2s ease, color .2s ease; }
+  .toc { position:fixed; left:30px; top:50%; transform:translateY(-50%); z-index:var(--z-raised); display:flex; flex-direction:column; gap:var(--space-md); padding:20px var(--space-lg); background:var(--color-panel-translucent); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid var(--color-edge-strong); border-radius:13px; box-shadow:0 16px 40px var(--color-shadow); }
+  .toc-h { font-size:9.5px; letter-spacing:2.5px; text-transform:uppercase; color:var(--color-accent-strong); opacity:.85; margin-bottom:3px; }
+  .toc a { display:flex; align-items:center; gap:var(--space-sm); font-size:11.5px; letter-spacing:1.6px; text-transform:uppercase; color:var(--color-ink); opacity:.8; text-decoration:none; transition:opacity var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out); white-space:nowrap; }
   .toc a:hover { opacity:1; }
-  .toc a .dot { width:8px; height:8px; border-radius:50%; border:1.6px solid currentColor; flex:none; transition:background .2s ease, transform .2s ease, box-shadow .2s ease; }
-  .toc a.active { opacity:1; color:#ffd76a; }
-  .toc a.active .dot { background:#ffd76a; transform:scale(1.35); box-shadow:0 0 10px rgba(255,215,106,.65); }
+  .toc a .dot { width:8px; height:8px; border-radius:50%; border:1.6px solid currentColor; flex:none; transition:background-color var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out); }
+  .toc a.active { opacity:1; color:var(--color-accent-strong); }
+  .toc a.active .dot { background:var(--color-accent-strong); transform:scale(1.35); }
   @media (max-width:1120px){ .toc { display:none; } }
 
-  footer { text-align:center; padding:40px 0 60px; color:#fbf3df; font-size:12px; letter-spacing:2px; text-transform:uppercase; text-shadow:0 1px 6px rgba(6,18,32,.8); }
+  footer { text-align:center; padding:var(--space-xl) 0 var(--space-2xl); border-top:1px solid var(--color-edge-strong); color:var(--color-ink-bright); font-size:12px; letter-spacing:2px; text-transform:uppercase; text-shadow:0 1px 6px var(--color-shadow); }
 
   /* floating language toggle — stays top-right through the whole scroll */
-  .lang { position:fixed; top:22px; right:22px; z-index:6; display:flex; gap:2px; padding:4px; background:rgba(8,22,38,.58); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.16); border-radius:999px; box-shadow:0 10px 30px rgba(6,18,32,.5); font-family:ui-monospace,"SF Mono",Menlo,monospace; }
-  .lang button { appearance:none; border:0; background:transparent; cursor:pointer; color:#f4ecdc; opacity:.72; font:inherit; font-size:12px; letter-spacing:1.4px; padding:6px 13px; border-radius:999px; transition:background .2s ease, color .2s ease, opacity .2s ease; }
+  .lang { position:fixed; top:22px; right:22px; z-index:var(--z-sticky); display:flex; gap:2px; padding:4px; background:var(--color-panel-translucent); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid var(--color-edge-strong); border-radius:var(--radius-round); box-shadow:0 10px 30px var(--color-shadow); font-family:var(--font-mono); }
+  .lang button { appearance:none; min-height:44px; border:0; background:transparent; cursor:pointer; color:var(--color-ink); opacity:.72; font:inherit; font-size:12px; letter-spacing:1.4px; padding:var(--space-xs) var(--space-sm); border-radius:var(--radius-round); transition:background-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out), opacity var(--dur-short) var(--ease-out); white-space:nowrap; }
   .lang button:hover { opacity:1; }
-  .lang button.active { background:#ffd76a; color:#1a2430; opacity:1; font-weight:700; }
-  .lang button:focus-visible { outline:2px solid #ffd76a; outline-offset:2px; }
-  @media (max-width:560px){ .lang { top:14px; right:14px; } .lang button { padding:6px 11px; font-size:11px; } }
+  .lang button.active { background:var(--color-accent-strong); color:var(--color-accent-ink); opacity:1; font-weight:700; }
+  .lang button:focus-visible { outline:2px solid var(--color-focus); outline-offset:2px; }
+  @media (max-width:560px){ .lang { position:absolute; top:var(--space-md); right:var(--space-md); } .lang button { padding:var(--space-xs) var(--space-sm); font-size:11px; } }
 
-  a:focus-visible { outline:2px solid #ffd76a; outline-offset:3px; }
+  a:focus-visible, button:focus-visible, input:focus-visible { outline:2px solid var(--color-focus); outline-offset:3px; }
+
+  /* Refundable founding pre-order — one transactional band inside the journal. */
+  .preorder { margin-bottom:var(--space-3xl); padding:calc(var(--space-xl) + var(--space-xs)); border:1px solid var(--edge); border-radius:5px; background:var(--paper); color:var(--ink); box-shadow:0 26px 74px var(--shadow), inset 0 1px 0 var(--color-edge); }
+  .preorder-header { display:grid; gap:var(--space-lg); }
+  .preorder-kicker { margin:0; color:var(--accent); font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+  .preorder h2 { min-width:0; max-width:15ch; margin:0; color:var(--ink); font-family:var(--font-display); font-size:clamp(2.15rem,6vw,3.7rem); font-style:normal; font-weight:600; letter-spacing:-.035em; line-height:1.03; overflow-wrap:anywhere; text-wrap:balance; }
+  .preorder-message { max-width:62ch; margin:0; color:var(--ink-soft); font-family:var(--font-display); font-size:clamp(1.12rem,2.4vw,1.35rem); line-height:1.52; }
+  .preorder-message strong { color:var(--ink); font-weight:600; }
+  .refund-truth { margin:0; padding-block:var(--space-md); border-block:1px solid var(--edge); color:var(--ink-soft); font-size:16px; line-height:1.6; }
+  .refund-truth strong { color:var(--accent); }
+
+  .escrow-ledger { display:grid; grid-template-columns:minmax(0,1fr); margin:var(--space-xl) 0 0; padding:0; border-top:1px solid var(--edge); }
+  .escrow-ledger > div { display:grid; gap:var(--space-xs); min-width:0; padding-block:var(--space-md); border-bottom:1px solid var(--edge); }
+  .escrow-ledger dt, .escrow-facts dt { color:var(--label); font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; }
+  .escrow-ledger dd, .escrow-facts dd { min-width:0; margin:0; color:var(--ink); font-family:var(--font-mono); font-size:14px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+  .escrow-address-line { display:flex; align-items:center; gap:var(--space-sm); min-width:0; }
+  .escrow-address-line a { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .escrow-phase { justify-self:start; padding:var(--space-2xs) var(--space-xs); border:1px solid var(--edge); border-radius:var(--radius-sm); }
+  .escrow-phase[data-phase="funding"], .escrow-phase[data-phase="released"] { border-color:var(--accent); color:var(--accent); }
+  .escrow-phase[data-phase="refunds"] { border-color:var(--color-success); color:var(--color-success); }
+  .escrow-proof { grid-column:1 / -1; }
+  .escrow-configuration { min-height:1.6em; margin:var(--space-sm) 0 0; color:var(--label); font-size:14px; }
+
+  .escrow-workflow { list-style:none; margin:var(--space-xl) 0 0; padding:0; border-top:1px solid var(--edge); }
+  .escrow-workflow li { display:grid; grid-template-columns:3.25rem minmax(0,1fr); gap:var(--space-sm); padding-block:var(--space-lg); border-bottom:1px solid var(--edge); }
+  .escrow-step-number, .escrow-step-state { color:var(--label); font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:1.3px; text-transform:uppercase; }
+  .escrow-workflow h3 { margin:0 0 var(--space-xs); color:var(--ink); font-family:var(--font-display); font-size:21px; font-style:normal; font-weight:600; line-height:1.15; }
+  .escrow-workflow p { max-width:54ch; margin:0; color:var(--ink-soft); font-size:16px; line-height:1.58; }
+  .escrow-step-state { grid-column:2; justify-self:start; padding:var(--space-2xs) var(--space-xs); border:1px solid var(--edge); border-radius:var(--radius-sm); white-space:nowrap; }
+  .escrow-workflow li[data-status="current"] .escrow-step-number, .escrow-workflow li[data-status="current"] .escrow-step-state { border-color:var(--accent); color:var(--accent); }
+  .escrow-workflow li[data-status="complete"] .escrow-step-number, .escrow-workflow li[data-status="complete"] .escrow-step-state { border-color:var(--color-success); color:var(--color-success); }
+
+  .escrow-console { display:grid; gap:var(--space-xl); margin:var(--space-xl) -3rem 0; padding:var(--space-xl) calc(var(--space-xl) + var(--space-xs)); border-block:1px solid var(--edge); background:var(--color-paper-2); color:var(--ink); }
+  .escrow-console-intro { display:grid; align-content:start; gap:var(--space-lg); }
+  .escrow-console-intro h3, .escrow-owner-panel h3, .escrow-key-panel h3 { margin:0; color:var(--ink); font-family:var(--font-display); font-size:clamp(1.55rem,3vw,2rem); font-style:normal; font-weight:600; letter-spacing:-.02em; line-height:1.1; }
+  .escrow-console-intro > p { margin:0; color:var(--ink-soft); font-size:16px; }
+  .escrow-facts { display:grid; margin:0; border-top:1px solid var(--edge); }
+  .escrow-facts > div { display:grid; gap:var(--space-2xs); padding-block:var(--space-sm); border-bottom:1px solid var(--edge); }
+  .escrow-transaction-panel, .escrow-owner-panel, .escrow-key-panel { display:grid; align-content:start; gap:var(--space-lg); }
+  .escrow-form { display:grid; gap:var(--space-xs); margin:0; }
+  .escrow-form label { color:var(--ink); font-size:16px; font-weight:700; }
+  .escrow-input-row { display:grid; gap:var(--space-sm); }
+  .escrow-input-row input { width:100%; min-width:0; min-height:var(--control-height); padding:var(--space-sm) calc(var(--space-xl) + var(--space-xs)) var(--space-sm) var(--space-md); border:1px solid var(--color-edge-strong); border-radius:var(--radius-sm); outline:2px solid transparent; outline-offset:1px; background:var(--color-input); color:var(--ink); font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+  .escrow-input-row input::placeholder { color:var(--label); }
+  .escrow-input-row input:focus-visible { border-color:var(--ink-soft); outline-color:var(--color-focus); }
+  .escrow-input-row input:disabled { cursor:not-allowed; opacity:.55; }
+  .escrow-input-row[data-state="error"] input { border-color:var(--color-error); }
+  .escrow-input-row[data-state="success"] input { border-color:var(--color-success); }
+  .escrow-helper, .escrow-status, .escrow-key-note { min-height:1.6em; margin:0; color:var(--label); font-size:16px; line-height:1.55; }
+  .escrow-input-row[data-state="error"] + .escrow-helper, .escrow-status[data-state="error"] { color:var(--color-error); }
+  .escrow-status[data-state="success"] { color:var(--color-success); }
+  .escrow-actions { display:flex; flex-wrap:wrap; gap:var(--space-sm); }
+
+  .escrow-button { position:relative; display:inline-flex; min-height:var(--control-height); align-items:center; justify-content:center; gap:var(--space-xs); padding:var(--space-sm) var(--space-md); border:1px solid var(--color-edge-strong); border-radius:var(--radius-sm); background:var(--color-paper-3); color:var(--ink); cursor:pointer; font-weight:700; line-height:1; text-decoration:none; transition:background-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out), transform var(--dur-micro) var(--ease-out); white-space:nowrap; }
+  .escrow-button.primary { border-color:var(--accent); background:var(--accent); color:var(--color-accent-ink); }
+  .escrow-button:active { transform:translateY(1px); }
+  .escrow-button:disabled { cursor:not-allowed; opacity:.5; }
+  .escrow-button[data-state="loading"] { cursor:progress; }
+  .escrow-button[data-state="loading"]::after { width:.8rem; height:.8rem; border:2px solid currentColor; border-inline-end-color:transparent; border-radius:var(--radius-round); content:""; animation:escrow-spin .8s linear infinite; }
+  .escrow-button[data-state="error"] { border-color:var(--color-error); background:var(--color-paper-3); color:var(--color-error); }
+  .escrow-button[data-state="success"], .escrow-button[data-connected="true"] { border-color:var(--color-success); background:var(--color-paper-3); color:var(--color-success); }
+  @keyframes escrow-spin { to { transform:rotate(1turn); } }
+  @media (hover:hover) and (pointer:fine) {
+    .escrow-button:hover:not(:disabled) { background:var(--color-ink); color:var(--color-paper); transform:translateY(-1px); }
+    .escrow-button.primary:hover:not(:disabled) { background:var(--color-accent-strong); color:var(--color-accent-ink); }
+    .escrow-copy:hover:not(:disabled) { border-color:var(--ink-soft); background:var(--color-paper-3); color:var(--ink); }
+    .escrow-input-row input:hover:not(:disabled) { background:var(--color-paper-3); }
+  }
+
+  .escrow-owner-panel, .escrow-key-panel { padding-block-start:var(--space-xs); border-top:1px solid var(--edge); }
+  .escrow-owner-panel[hidden], .escrow-key-panel[hidden] { display:none; }
+  .escrow-key-result { display:grid; gap:var(--space-sm); padding-block:var(--space-md); border-block:1px solid var(--edge); }
+  .escrow-key-result code { color:var(--ink); font-family:var(--font-mono); font-size:16px; overflow-wrap:anywhere; }
+  .escrow-copy { min-height:44px; padding-inline:var(--space-sm); border:1px solid var(--edge); border-radius:var(--radius-sm); background:transparent; color:var(--ink-soft); cursor:pointer; font-family:var(--font-mono); font-size:12px; white-space:nowrap; }
+  .escrow-copy:disabled { cursor:not-allowed; opacity:.5; }
+  .escrow-copy[data-state="success"] { border-color:var(--color-success); color:var(--color-success); }
+  .preorder-legal { margin:var(--space-lg) 0 0; color:var(--label); font-size:16px; line-height:1.55; }
+
+  @media (min-width:40rem) {
+    .escrow-ledger { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .escrow-ledger > div { padding:var(--space-md); }
+    .escrow-ledger > div:nth-child(even) { border-left:1px solid var(--edge); }
+    .escrow-input-row { grid-template-columns:minmax(0,1fr) auto; }
+    .escrow-workflow li { grid-template-columns:3.25rem minmax(0,1fr) auto; align-items:start; }
+    .escrow-step-state { grid-column:3; justify-self:end; }
+  }
+
+  @media (min-width:60rem) {
+    .escrow-console { grid-template-columns:minmax(0,5fr) minmax(0,7fr); }
+    .escrow-facts > div { grid-template-columns:minmax(0,1fr) minmax(0,1.35fr); align-items:baseline; }
+  }
 
   @media (max-width:560px){
-    .post { padding:32px 24px 34px; }
+    .post { padding:calc(var(--space-lg) + var(--space-xs)) var(--space-lg); }
+    .preorder { padding:calc(var(--space-lg) + var(--space-xs)) var(--space-lg); }
+    .escrow-console { margin-inline:-24px; padding-inline:24px; }
+    .escrow-button { width:100%; }
+    .escrow-actions { display:grid; }
     .seat .who { font-size:20px; }
     .stem { padding:16px; }
     .seat { padding:16px; }
@@ -127,9 +235,15 @@
     .side:first-child { padding-right:0; }
     .side:last-child { padding-left:0; border-left:0; border-top:1px solid var(--edge); }
   }
-</style>
 
-<video id="sea" autoplay muted loop playsinline preload="auto" poster="assets/ocean-ship-poster.webp">
+  @media (prefers-reduced-motion:reduce) {
+    *, *::before, *::after { animation-duration:150ms !important; animation-iteration-count:1 !important; transition-duration:150ms !important; scroll-behavior:auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<video id="sea" autoplay muted loop playsinline preload="auto" fetchpriority="high" poster="assets/ocean-ship-poster.webp">
   <source src="assets/ocean-ship-loop.webm" type="video/webm">
 </video>
 <div class="scrim"></div>
@@ -148,6 +262,7 @@
   <a href="#s-diff" data-ko="<span class=&quot;dot&quot;></span>차별점"><span class="dot"></span>What's different</a>
   <a href="#s-goal" data-ko="<span class=&quot;dot&quot;></span>목표"><span class="dot"></span>The goal</a>
   <a href="#s-ambition" data-ko="<span class=&quot;dot&quot;></span>지향점"><span class="dot"></span>The ambition</a>
+  <a href="#s-preorder" data-ko="<span class=&quot;dot&quot;></span>사전 주문"><span class="dot"></span>Pre-order</a>
 </nav>
 
 <div class="shell">
@@ -261,72 +376,180 @@
     <blockquote class="pull" data-ko="기회에 지원하지 마십시오. <b>기회가 당신을 찾아올 때까지 성장하십시오.</b>">You don't apply to opportunity. <b>You grow until it finds you.</b></blockquote>
   </article>
 
+  <section class="preorder" id="preorder" aria-labelledby="s-preorder">
+    <header class="preorder-header">
+      <p class="preorder-kicker" data-ko="창립 리허설 · 폴리곤 Amoy 테스트넷">Founding rehearsal · Polygon Amoy testnet</p>
+      <h2 id="s-preorder" data-ko="출시를 후원하세요. 환불 권리는 지키세요.">Back the launch. Keep the refund.</h2>
+      <p class="preorder-message" data-ko="Pirate Network는 에이전트 시대에 맞게 채용을 다시 만들려는 시도입니다. 이 도전을 돕고 싶다면 아래 스마트 계약을 통해 사전 주문해 주세요. 저희는 30일 안에 제품과 Product Hunt 출시 증거를 공개합니다. 출시 후 제품을 받아들일 때만 승인하세요. 승인은 제품 키를 열고 오직 본인의 예치금만 팀에 전달합니다. 기한까지 승인하지 않으면 전액은 같은 지갑으로 환불 가능한 상태로 남습니다.">
+        Pirate Network is an attempt to rebuild hiring for the agent era. If you want to help us
+        test it, place a pre-order through the smart contract below. We have 30 days to publish the
+        product and its Product Hunt release evidence. After release, <strong>approve only if you
+        accept the product</strong>. Approval unlocks your product key and releases only your pledge.
+        If you do not approve by the deadline, your full pledge remains refundable to the same wallet.
+      </p>
+      <p class="refund-truth" data-ko="<strong>‘자동 환불’의 정확한 의미:</strong> 기한이 지나면 환불 권리가 자동으로 활성화됩니다. 블록체인 계약은 스스로 거래를 시작할 수 없으므로, 본인이나 자동화 봇이 환불 거래를 제출해야 합니다. 누구나 대신 실행할 수 있지만 자금은 사전 주문한 지갑으로만 돌아갑니다.">
+        <strong>What “automatic refund” means:</strong> the refund right activates automatically at
+        the deadline. A blockchain contract cannot initiate its own transaction, so you—or a refund
+        bot—must submit it. Anyone can process it for you, but the contract can return the funds only
+        to the wallet that placed the pre-order.
+      </p>
+    </header>
+
+    <dl class="escrow-ledger" aria-label="Live escrow state">
+      <div>
+        <dt data-ko="스마트 계약">Smart contract</dt>
+        <dd class="escrow-address-line">
+          <a id="escrow-contract-link">Loading…</a>
+          <button class="escrow-copy" id="escrow-copy-address" type="button" disabled data-ko="복사" data-live lang="en">Copy</button>
+        </dd>
+      </div>
+      <div>
+        <dt data-ko="계약 상태">Contract state</dt>
+        <dd class="escrow-phase" id="escrow-phase" data-phase="pending" lang="en">Checking Amoy</dd>
+      </div>
+      <div>
+        <dt data-ko="30일 마감일">30-day deadline</dt>
+        <dd id="escrow-deadline">—</dd>
+      </div>
+      <div>
+        <dt data-ko="남은 시간">Time remaining</dt>
+        <dd id="escrow-countdown" lang="en">Starts after deployment</dd>
+      </div>
+      <div>
+        <dt data-ko="최소 첫 사전 주문">Minimum first pre-order</dt>
+        <dd id="escrow-minimum">0.01 test POL</dd>
+      </div>
+      <div>
+        <dt data-ko="총 사전 주문">Total pre-ordered</dt>
+        <dd id="escrow-total">—</dd>
+      </div>
+      <div>
+        <dt data-ko="승인된 금액">Approved amount</dt>
+        <dd id="escrow-approved">—</dd>
+      </div>
+      <div class="escrow-proof" id="escrow-proof" hidden>
+        <dt data-ko="출시 증거">Release evidence</dt>
+        <dd><a id="escrow-proof-link" lang="en">View release evidence</a></dd>
+      </div>
+    </dl>
+    <p class="escrow-configuration" id="escrow-configuration" role="status"></p>
+
+    <ol class="escrow-workflow" id="escrow-workflow" aria-label="Pre-order approval process">
+      <li data-step="pledge" data-status="waiting">
+        <span class="escrow-step-number">1.0</span>
+        <div>
+          <h3 data-ko="POL 예치">Pre-order in POL</h3>
+          <p data-ko="폴리곤 Amoy 테스트넷에서 지갑을 연결하고 계약에 표시된 최소 테스트 POL 이상을 예치합니다. 팀은 이 단계에서 승인되지 않은 자금을 인출할 수 없습니다.">Connect a wallet on Polygon Amoy and escrow at least the minimum test POL shown by the contract. The team cannot withdraw unapproved funds.</p>
+        </div>
+        <span class="escrow-step-state" lang="en">Waiting</span>
+      </li>
+      <li data-step="release" data-status="waiting">
+        <span class="escrow-step-number">2.0</span>
+        <div>
+          <h3 data-ko="30일 내 출시">Release within 30 days</h3>
+          <p data-ko="팀은 마감 전에 공개 Product Hunt 출시 URL 또는 다른 객관적 증거를 온체인에 기록합니다.">The team records a public Product Hunt launch URL—or other objective evidence—on-chain before the deadline.</p>
+        </div>
+        <span class="escrow-step-state" lang="en">Waiting</span>
+      </li>
+      <li data-step="decision" data-status="waiting">
+        <span class="escrow-step-number">3.0</span>
+        <div>
+          <h3 data-ko="본인의 결정">Make your decision</h3>
+          <p data-ko="제품을 확인한 뒤 본인의 예치금만 승인합니다. 다수결이나 팀 관리자가 다른 후원자의 선택을 대신할 수 없습니다.">Review the product, then approve only your own pledge. No majority vote or team administrator can decide for another supporter.</p>
+        </div>
+        <span class="escrow-step-state" lang="en">Waiting</span>
+      </li>
+      <li data-step="resolve" data-status="waiting">
+        <span class="escrow-step-number">4.0</span>
+        <div>
+          <h3 data-ko="키 또는 환불">Receive the key or refund</h3>
+          <p data-ko="승인하면 서명 확인 후 제품 키를 받습니다. 승인하지 않으면 마감 후 전액 환불을 청구할 수 있습니다.">Approval enables wallet-verified product-key access. Without approval, the full pledge becomes refundable after the deadline.</p>
+        </div>
+        <span class="escrow-step-state" lang="en">Waiting</span>
+      </li>
+    </ol>
+
+    <section class="escrow-console" aria-labelledby="escrow-console-title">
+      <div class="escrow-console-intro">
+        <h3 id="escrow-console-title" data-ko="지갑이 예치금을 통제합니다.">Your wallet controls the pledge.</h3>
+        <p data-ko="연결을 누르면 지갑의 계정 권한 화면이 열립니다. 페이지는 지갑이 실제로 권한을 반환한 뒤에만 연결된 것으로 표시합니다. 시드 문구나 개인 키는 절대 입력하지 마세요.">
+          Connecting opens your wallet’s account-permission screen. The page shows a connected wallet
+          only after the wallet returns permission. Never enter a seed phrase or private key here.
+        </p>
+        <button class="escrow-button" id="escrow-connect" type="button" lang="en">Connect wallet</button>
+        <dl class="escrow-facts">
+          <div>
+            <dt data-ko="연결된 지갑">Connected wallet</dt>
+            <dd id="escrow-wallet" lang="en">Not connected</dd>
+          </div>
+          <div>
+            <dt data-ko="나의 예치금">Your pledge</dt>
+            <dd id="escrow-supporter-amount">0 POL</dd>
+          </div>
+          <div>
+            <dt data-ko="나의 결정">Your decision</dt>
+            <dd id="escrow-supporter-decision" lang="en">No pre-order found</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="escrow-transaction-panel">
+        <form class="escrow-form" id="escrow-pledge-form" novalidate>
+          <label for="escrow-amount" data-ko="사전 주문 금액 (POL)">Pre-order amount (POL)</label>
+          <div class="escrow-input-row" id="escrow-amount-field">
+            <input id="escrow-amount" name="amount" type="text" inputmode="decimal" placeholder="0.01" aria-describedby="escrow-amount-helper" aria-errormessage="escrow-amount-helper" aria-required="true" disabled>
+            <button class="escrow-button primary" id="escrow-pledge" type="submit" disabled data-ko="사전 주문" data-live lang="en">Pre-order</button>
+          </div>
+          <p class="escrow-helper" id="escrow-amount-helper" data-ko="첫 테스트 사전 주문은 최소 0.01 테스트 POL입니다. 출시에 대한 기록이 남거나 30일 기한이 지나면 신규 예치가 마감됩니다." data-live aria-live="polite" aria-atomic="true" lang="en">The first test pre-order requires at least 0.01 test POL. New pledges close when release is recorded or the 30-day deadline passes.</p>
+        </form>
+
+        <div class="escrow-actions">
+          <button class="escrow-button" id="escrow-approve" type="button" disabled data-ko="제품 승인" data-live lang="en">Approve product</button>
+          <button class="escrow-button" id="escrow-refund" type="button" disabled data-ko="환불 청구" data-live lang="en">Claim refund</button>
+        </div>
+
+        <section class="escrow-owner-panel" id="escrow-owner-panel" aria-labelledby="escrow-owner-title" hidden>
+          <h3 id="escrow-owner-title">Owner release rehearsal</h3>
+          <p class="escrow-key-note">
+            This control appears only for the contract owner. Recording release evidence is permanent,
+            immediately closes new pre-orders, and lets funded supporters approve the product.
+          </p>
+          <div class="escrow-form">
+            <label for="escrow-release-proof">Public release evidence URL</label>
+            <div class="escrow-input-row" id="escrow-release-field">
+              <input id="escrow-release-proof" name="releaseProof" type="url" value="https://github.com/must-aero/pirateship" aria-describedby="escrow-release-helper" aria-errormessage="escrow-release-helper" disabled>
+              <button class="escrow-button primary" id="escrow-release" type="button" disabled lang="en">Record test release</button>
+            </div>
+            <p class="escrow-helper" id="escrow-release-helper" aria-live="polite" aria-atomic="true" lang="en">For this Amoy rehearsal, the public project repository is used as test evidence. Use the real Product Hunt or product release URL on mainnet.</p>
+          </div>
+        </section>
+
+        <section class="escrow-key-panel" id="escrow-key-panel" aria-labelledby="escrow-key-title" hidden>
+          <h3 id="escrow-key-title" data-ko="제품 키를 받을 수 있습니다.">Your product key is ready.</h3>
+          <p class="escrow-key-note" data-ko="승인된 지갑은 짧고 만료되는 메시지에 서명합니다. 메시지 서명은 무료이며 자금을 이동할 수 없습니다. 지갑에서 항상 메시지를 먼저 읽으세요.">An approved wallet signs a short, expiring message. Message signing is free and cannot move funds—always read it in your wallet first.</p>
+          <button class="escrow-button" id="escrow-key" type="button" disabled data-ko="제품 키 받기" data-live lang="en">Get product key</button>
+          <div class="escrow-key-result" id="escrow-key-result" hidden>
+            <span class="mono" data-ko="제품 키">Your product key</span>
+            <code id="escrow-key-value"></code>
+            <button class="escrow-copy" id="escrow-copy-key" type="button" data-ko="키 복사" data-live lang="en">Copy key</button>
+          </div>
+        </section>
+
+        <p class="escrow-status" id="escrow-status" role="status" aria-live="polite" aria-atomic="true" data-ko="예치금을 소유할 지갑을 연결하세요." data-live lang="en">Connect the wallet that will own the pledge.</p>
+      </div>
+    </section>
+
+    <p class="preorder-legal" data-ko="현재 화면은 가치가 없는 테스트 POL을 사용하는 폴리곤 Amoy 테스트넷 리허설입니다. 메인넷 자금을 보내지 마세요.">
+      This is a Polygon Amoy testnet rehearsal using test POL with no real monetary value. Do not send
+      mainnet funds to this contract.
+    </p>
+  </section>
+
   <footer class="mono" data-ko="Must Company 제작 · © 2026">Written by Must Company · © 2026</footer>
 </div>
 
-<script>
-  // Respect reduced-motion: leave the poster frame up instead of autoplaying.
-  (function () {
-    var v = document.getElementById('sea');
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var stop = function () { v.pause(); v.removeAttribute('autoplay'); v.currentTime = 0; };
-    stop(); v.addEventListener('play', stop);
-  })();
-
-  // Left rail: highlight the last heading scrolled past the trigger line.
-  (function () {
-    var links = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
-    if (!links.length) return;
-    var heads = links.map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); }).filter(Boolean);
-    if (!heads.length) return;
-    function setActive(id) {
-      links.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + id); });
-    }
-    var ticking = false;
-    function update() {
-      ticking = false;
-      var line = (window.innerHeight || document.documentElement.clientHeight) * 0.3;
-      var current = heads[0].id;
-      for (var i = 0; i < heads.length; i++) {
-        if (heads[i].getBoundingClientRect().top <= line) current = heads[i].id;
-      }
-      setActive(current);
-    }
-    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    update();
-  })();
-
-  // Pop each section heading in as it enters view.
-  (function () {
-    var heads = document.querySelectorAll('.post > h2');
-    if (!heads.length || !('IntersectionObserver' in window)) return;
-    var obs = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); }
-      });
-    }, { threshold: 0.15 });
-    heads.forEach(function (h) { obs.observe(h); });
-  })();
-
-  // Language toggle: swap innerHTML of every [data-ko] element, English cached on load.
-  (function () {
-    var nodes = Array.prototype.slice.call(document.querySelectorAll('[data-ko]'));
-    var en = nodes.map(function (n) { return n.innerHTML; });
-    var btns = Array.prototype.slice.call(document.querySelectorAll('.lang button'));
-    var lang = 'en';
-    function set(l) {
-      if (l === lang) return;
-      lang = l;
-      nodes.forEach(function (n, i) { n.innerHTML = (l === 'ko') ? n.getAttribute('data-ko') : en[i]; });
-      document.documentElement.lang = l;
-      btns.forEach(function (b) {
-        var on = b.getAttribute('data-lang') === l;
-        b.classList.toggle('active', on);
-        b.setAttribute('aria-pressed', on ? 'true' : 'false');
-      });
-    }
-    btns.forEach(function (b) { b.addEventListener('click', function () { set(b.getAttribute('data-lang')); }); });
-  })();
-</script>
+<script src="page.js"></script>
+<script src="escrow-config.js"></script>
+<script src="escrow.js"></script>
+</body>
+</html>
