@@ -17,7 +17,7 @@ The Amoy rehearsal is complete. Do not accept real Polygon mainnet funds until e
 
 ## Production service
 
-- [ ] Replace process-local rate limits and wallet challenges with shared TTL storage, per-wallet issuance controls, and a trusted-proxy policy.
+- [ ] Replace process-local rate limits and wallet challenges with shared TTL storage, cross-instance per-wallet issuance coordination, and a trusted-proxy policy.
 - [ ] Move product keys to encrypted persistent storage with restricted service credentials, tested backups, inventory monitoring, and a documented recovery procedure.
 - [ ] Use a dedicated authenticated Polygon RPC, reduce campaign-read bursts, and monitor provider throttling and chain reorganizations.
 - [ ] Run end-to-end staging tests for wrong-network switching, receipt timeout/revert recovery, CORS/proxy behavior, graceful shutdown, and concurrent key redemption.
