@@ -2,12 +2,20 @@
 
 The Amoy rehearsal is complete. Do not accept real Polygon mainnet funds until every blocking item below is closed.
 
+## Completed preparation
+
+- [x] Add a read-only chain/custody/price/audit preflight that cannot access wallet secrets or deploy a contract.
+- [x] Pin the Solidity compiler version and document the exact optimizer and EVM settings used for the deployment fingerprint.
+- [x] Write a staged Polygon mainnet runbook that keeps the public page on Amoy until source and constructor verification pass.
+
 ## Security and custody
 
 - [ ] Obtain an independent Solidity audit, including malicious receiver, transfer-failure, and reentrancy tests.
 - [ ] Put the contract owner and beneficiary roles behind a reviewed multisig or hardware-wallet process; document the release transaction approval policy.
+- [ ] Resolve the immutable-owner deployment path: the current deployer becomes `owner`, so a multi-administrator launch needs a reviewed multisig direct-deployment mechanism or an explicit-owner constructor revision followed by audit.
 - [ ] Verify the final source and constructor arguments on PolygonScan before publishing the mainnet address.
 - [ ] Require finalized or sufficiently confirmed approval state before assigning an irreversible product key.
+- [ ] Resolve or formally isolate the audit findings in the Ganache/Solidity development toolchain before running it on untrusted contributions; the production dependency audit is currently clean.
 
 ## Product and pricing
 
