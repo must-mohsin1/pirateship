@@ -25,7 +25,8 @@ The Amoy rehearsal is complete. Do not accept real Polygon mainnet funds until e
 
 ## Production service
 
-- [ ] Replace process-local rate limits and wallet challenges with shared TTL storage, cross-instance per-wallet issuance coordination, and a trusted-proxy policy.
-- [ ] Move product keys to encrypted persistent storage with restricted service credentials, tested backups, inventory monitoring, and a documented recovery procedure.
+- [x] Add Vercel Functions backed by shared Redis TTL challenges, shared rate limits, and atomic cross-instance per-wallet issuance coordination.
+- [x] Encrypt Redis product-key inventory with a server-only AES-256-GCM key before storage.
+- [ ] Provision the production Redis integration, restrict its credentials, enable persistence/backups, add inventory monitoring, and test the recovery procedure.
 - [ ] Use a dedicated authenticated Polygon RPC, reduce campaign-read bursts, and monitor provider throttling and chain reorganizations.
 - [ ] Run end-to-end staging tests for wrong-network switching, receipt timeout/revert recovery, CORS/proxy behavior, graceful shutdown, and concurrent key redemption.

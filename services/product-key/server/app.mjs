@@ -127,13 +127,16 @@ export function createApiHandler({
   );
   let lastRateLimitSweep = 0;
 
-  function exceedsRateLimit(request) {
+  async function exceedsRateLimit(request) {
     const forwarded = trustProxy ? request.headers["x-forwarded-for"] : null;
     const key =
       (typeof forwarded === "string" ? forwarded.split(",")[0].trim() : null) ??
       request.socket?.remoteAddress ??
       "unknown-client";
     const timestamp = now();
+    if (typeof store.takeRateLimit === "function") {
+      return store.takeRateLimit(key, timestamp, rateLimitWindowMs, rateLimitMax);
+    }
     if (
       timestamp - lastRateLimitSweep >= rateLimitWindowMs ||
       rateLimits.size >= rateLimitMaxClients
@@ -158,6 +161,7 @@ export function createApiHandler({
 
     try {
       if (request.method === "GET" && url.pathname === "/api/health") {
+        if (typeof store.healthCheck === "function") await store.healthCheck();
         sendJson(response, 200, { ok: true });
         return true;
       }
@@ -165,7 +169,7 @@ export function createApiHandler({
       if (
         request.method === "POST" &&
         ["/api/auth/challenge", "/api/keys/redeem"].includes(url.pathname) &&
-        exceedsRateLimit(request)
+        await exceedsRateLimit(request)
       ) {
         sendJson(response, 429, {
           error: "Too many wallet-verification requests. Wait ten minutes and try again.",
@@ -193,7 +197,7 @@ export function createApiHandler({
           expiresAt,
           publicOrigin,
         });
-        store.putChallenge(challengeId, address, message, expiresAt, now());
+        await store.putChallenge(challengeId, address, message, expiresAt, now());
         sendJson(response, 200, { challengeId, address, message, expiresAt });
         return true;
       }
@@ -218,7 +222,7 @@ export function createApiHandler({
           return true;
         }
 
-        const challenge = store.getChallenge(challengeId, address);
+        const challenge = await store.getChallenge(challengeId, address);
         if (!challenge || challenge.used || challenge.expiresAt < now()) {
           sendJson(response, 401, {
             error: "The verification request expired or was already used. Request a new signature.",
@@ -245,7 +249,7 @@ export function createApiHandler({
 
         const entitlement = await verifyWithCapacity(address);
 
-        if (!store.consumeChallenge(challengeId, address, challenge.message, now())) {
+        if (!(await store.consumeChallenge(challengeId, address, challenge.message, now()))) {
           sendJson(response, 409, {
             error: "That verification request was already used. Request a new signature.",
           });
@@ -259,7 +263,7 @@ export function createApiHandler({
           return true;
         }
 
-        const assignment = store.assignKey(address, now());
+        const assignment = await store.assignKey(address, now());
         if (!assignment) {
           sendJson(response, 503, {
             error: "No product keys are available yet. The project owner must add inventory.",
@@ -301,8 +305,8 @@ export function createApiHandler({
           return true;
         }
 
-        const inserted = store.addKeys(body.keys);
-        sendJson(response, 200, { inserted, inventory: store.stats() });
+        const inserted = await store.addKeys(body.keys);
+        sendJson(response, 200, { inserted, inventory: await store.stats() });
         return true;
       }
 

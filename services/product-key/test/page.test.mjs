@@ -4,6 +4,13 @@ import test from "node:test";
 import vm from "node:vm";
 
 const source = await readFile(new URL("../../../page.js", import.meta.url), "utf8");
+const html = await readFile(new URL("../../../pirate-network-blog.html", import.meta.url), "utf8");
+
+test("the launch is directly reachable from desktop and compact navigation", () => {
+  assert.equal((html.match(/href="#preorder"/g) ?? []).length, 2);
+  assert.match(html, /aria-label="Launch"/);
+  assert.match(html, /<span class="dot"><\/span>Pre-order<\/a>/);
+});
 
 class FakeElement {
   constructor({ id = "", attributes = {}, innerHTML = "", top = 0 } = {}) {

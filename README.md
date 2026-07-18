@@ -8,7 +8,8 @@ This repository contains the Pirate Network essay landing page plus a 30-day ref
 - `escrow.js` — dependency-free Polygon wallet, contract read, owner release, pre-order, approval, refund, and product-key interactions.
 - `escrow-config.js` — public frontend configuration.
 - `contracts/RefundableProductEscrow.sol` — the tested 30-day escrow contract.
-- `services/product-key/` — the signed-wallet product-key API, SQLite inventory, static server, and automated tests.
+- `services/product-key/` — the signed-wallet product-key API, local SQLite inventory, shared Redis Vercel inventory, and automated tests.
+- `api/` — Vercel Function entry points for health, wallet challenges, key redemption, and private inventory administration.
 - `tokens.css` — shared design tokens used by the page.
 
 Release notes are tracked in [`CHANGELOG.md`](CHANGELOG.md). The remaining real-money launch blockers are tracked in [`TODOS.md`](TODOS.md), and the current checkpoint version is stored in [`VERSION`](VERSION).
@@ -77,9 +78,22 @@ Use a dedicated authenticated production RPC rather than depending on the public
 
 ### 3. Serve the product-key API
 
-Product keys must never be embedded in the public frontend. Deploy `services/product-key` with its SQLite database on persistent encrypted storage, the exact contract address, a secret administrator token, and private product-key inventory.
+Product keys must never be embedded in the public frontend. The repository supports two deployment shapes:
 
-The included server serves the landing page and `/api/*` from one origin and keeps `keyApiBase` empty. In production, place it behind HTTPS and a trusted reverse proxy, set `TRUST_PROXY=true`, block direct access to the Node port, and configure the proxy to overwrite—not append untrusted—forwarding headers. Otherwise all supporters can share one proxy rate-limit bucket, or attackers can spoof client addresses. A separate API origin requires setting one exact `CORS_ORIGIN` on the service and setting `keyApiBase` to that HTTPS origin in `escrow-config.js`; never allow `*` for the wallet-verification endpoints.
+- The integrated local or long-running Node server uses SQLite and serves the page plus `/api/*` from one process.
+- The root `api/` routes are Vercel Functions. They use Upstash Redis because a Vercel Function has a read-only filesystem apart from temporary scratch space and may scale to multiple instances.
+
+For the current Vercel deployment:
+
+1. In the Vercel project, open **Storage**, install the **Upstash Redis** Marketplace integration, create a database near the Function region, and connect it to this project.
+2. Copy every variable from `.env.vercel.example` into the Vercel Production environment. The integration supplies `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
+3. Generate `ADMIN_TOKEN` with `openssl rand -base64 48` and `PRODUCT_KEY_ENCRYPTION_KEY` with `openssl rand -base64 32`. Store both only in Vercel environment variables and the team password manager. Changing the encryption key after loading inventory makes existing encrypted keys unreadable.
+4. Use a dedicated authenticated Polygon RPC. Keep `CONTRACT_ADDRESS` identical to `escrow-config.js` and keep `PUBLIC_ORIGIN` exactly `https://pirateship-must.vercel.app` for this deployment.
+5. Redeploy, then confirm `GET https://pirateship-must.vercel.app/api/health` returns `{ "ok": true }`.
+
+The Redis adapter stores wallet challenges with a TTL, applies a shared per-client rate limit, atomically assigns one stable key per approved wallet, and encrypts inventory with AES-256-GCM before storage. Use a separate `PRODUCT_KEY_REDIS_PREFIX` for Amoy and mainnet so rehearsal data cannot collide with production assignments.
+
+The integrated long-running server keeps `keyApiBase` empty as well. When it is deployed behind a separate HTTPS reverse proxy, set `TRUST_PROXY=true`, block direct access to the Node port, and make the proxy overwrite forwarding headers. A separate API origin requires one exact `CORS_ORIGIN` and the matching HTTPS `keyApiBase`; never allow `*` for wallet-verification endpoints.
 
 The API uses JSON and returns errors as `{ "error": "..." }`:
 
@@ -97,9 +111,15 @@ Runtime configuration:
 | `PUBLIC_ORIGIN` | Public origin used in signed wallet challenges. |
 | `CORS_ORIGIN` | Optional single allowed browser origin when the API is hosted separately. |
 | `ADMIN_TOKEN` | Private inventory-administration token with at least 32 random characters. |
+| `UPSTASH_REDIS_REST_URL` | Server-only Upstash REST endpoint injected by the Vercel integration. |
+| `UPSTASH_REDIS_REST_TOKEN` | Server-only Upstash standard token; never expose it in browser code. |
+| `PRODUCT_KEY_ENCRYPTION_KEY` | Base64-encoded 32-byte AES key used to encrypt Redis inventory. |
+| `PRODUCT_KEY_REDIS_PREFIX` | Environment/contract-specific Redis namespace. |
 | `RPC_TIMEOUT_MS` | Timeout for an upstream Polygon verification request; defaults to `10000`. |
 | `VERIFICATION_MAX_CONCURRENT` | Maximum simultaneous on-chain entitlement checks; defaults to `8`. |
 | `VERIFICATION_MAX_QUEUED` | Maximum checks waiting for capacity; defaults to `32`. |
+| `RATE_LIMIT_WINDOW_MS` | Shared Redis rate-limit window; defaults to ten minutes. |
+| `RATE_LIMIT_MAX` | Wallet-verification requests allowed per client/window; defaults to `60`. |
 | `PORT` | Local HTTP listen port; defaults to `4173`. |
 | `HOST` | Local listen address; defaults to `127.0.0.1`. |
 | `DATABASE_PATH` | Persistent SQLite product-key database path. |
@@ -117,7 +137,7 @@ printf 'header = "Authorization: Bearer %s"\n' "$ADMIN_TOKEN" |
 unset ADMIN_TOKEN
 ```
 
-The integrated process bounds its local rate-limit and challenge stores, limits concurrent on-chain entitlement checks, queues only a small amount of verification work, and applies an RPC timeout. Keep equivalent request and concurrency limits at the reverse proxy. A multi-instance mainnet service should replace process-local state with shared TTL storage and keep the API inaccessible except through a proxy that overwrites forwarding headers.
+The integrated process bounds its local rate-limit and challenge stores. Vercel uses shared Redis TTL state and cross-instance assignment coordination. Both shapes limit concurrent on-chain entitlement checks, queue only a small amount of verification work, and apply an RPC timeout. Enable Redis persistence/backups, inventory alerts, and a tested recovery procedure before the mainnet launch.
 
 ### 4. Publish the release
 

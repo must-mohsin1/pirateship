@@ -2,6 +2,19 @@
 
 All notable changes to Pirate Network are documented in this file.
 
+## [0.1.2.0] - 2026-07-18
+
+### Added
+
+- Vercel Function routes now serve health checks, signed-wallet challenges, product-key redemption, and authenticated inventory administration from the deployed landing-page origin.
+- Upstash Redis provides shared expiring challenges, cross-instance rate limits, encrypted inventory, and atomic stable key assignment for approved wallets.
+- Desktop and compact navigation now link directly to the refundable pre-order section.
+
+### Changed
+
+- Product-key service methods support asynchronous persistent adapters while keeping the local SQLite workflow intact.
+- Production setup documentation now includes the required Vercel, Redis, Polygon RPC, administrator-token, and encryption-key configuration.
+
 ## [0.1.1.0] - 2026-07-17
 
 ### Added
