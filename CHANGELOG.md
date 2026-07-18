@@ -2,6 +2,18 @@
 
 All notable changes to Pirate Network are documented in this file.
 
+## [0.1.1.0] - 2026-07-17
+
+### Added
+
+- A read-only Polygon mainnet preflight validates chain ID, public custody addresses, review evidence, deployer gas balance, immutable pledge conversion, and the compiled contract fingerprint without accepting wallet secrets or sending transactions.
+- A staged mainnet launch runbook covers price approval, release criteria, independent audit, owner/beneficiary custody, source verification, configuration cutover, and the production canary.
+
+### Changed
+
+- The Solidity compiler dependency is pinned to `0.8.30` for reproducible deployment review.
+- Mainnet documentation now makes the deployer-as-immutable-owner constraint explicit and keeps the public landing page on Amoy until every production gate passes.
+
 ## [0.1.0.0] - 2026-07-17
 
 ### Added
