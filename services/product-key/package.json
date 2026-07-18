@@ -1,0 +1,24 @@
+{
+  "name": "pirate-network-product-key-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "serve": "node --env-file=../../.env server/index.mjs",
+    "serve:amoy": "node --env-file=../../.env.amoy server/index.mjs",
+    "check": "node --check ../../page.js && node --check ../../escrow.js && node --check ../../escrow-config.js",
+    "test": "node --test test/*.test.mjs server/*.test.mjs",
+    "test:contract": "node --test test/RefundableProductEscrow.test.mjs",
+    "test:server": "node --test server/*.test.mjs"
+  },
+  "dependencies": {
+    "ethers": "^6.17.0"
+  },
+  "devDependencies": {
+    "ganache": "^7.9.2",
+    "solc": "^0.8.30"
+  }
+}

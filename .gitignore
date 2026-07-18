@@ -1,2 +1,15 @@
 .DS_Store
 node_modules/
+.env
+.env.*
+!.env.example
+!.env.amoy.example
+data/
+*.db
+*.db-shm
+*.db-wal
+keys.json
+product-keys*.json
+coverage/
+dist/
+.hallmark/
