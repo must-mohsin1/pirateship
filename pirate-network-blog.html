@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>Pirate Network — a voyage journal</title>
+<title>Pirate Ship by MUST — a voyage journal</title>
 <style>
   /* Dark only — the page ignores the OS/viewer light preference by design. */
   :root { color-scheme: dark; --paper:#151f28; --edge: rgba(210,180,120,0.20); --ink:#f0e8d6; --ink-soft:#b6a884; --accent:#e0ac52; --label:#9d8a63; --shadow: rgba(0,0,0,0.55); }
@@ -10,7 +10,10 @@
   .serif { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif; }
   .mono  { font-family:ui-monospace,"SF Mono",Menlo,monospace; }
 
-  #sea { position:fixed; inset:0; width:100vw; height:100vh; object-fit:cover; z-index:-2; display:block; background:#0a3d5e; }
+  /* the sea is scenery, not a subject: pull it back so text always wins.
+     brightness/saturate are the tuning knobs — raise for a livelier sea, lower if text still fights it. */
+  #sea { position:fixed; inset:0; width:100vw; height:100vh; object-fit:cover; z-index:-2; display:block; background:#0a3d5e;
+    filter:saturate(.62) brightness(.58) contrast(.92); }
   /* legibility scrim: darkens the hero text zone (left) and the top/bottom bands,
      while keeping the ship and horizon (center) clear */
   .scrim { position:fixed; inset:0; z-index:-1; pointer-events:none;
@@ -23,6 +26,7 @@
   .masthead { padding:26px 0 0; display:flex; align-items:baseline; justify-content:space-between; gap:18px; flex-wrap:wrap; }
   .brand { font-size:13px; letter-spacing:3px; text-transform:uppercase; color:#fbf3df; text-shadow:0 1px 5px rgba(8,25,40,.8); }
   .brand b { color:#ffd76a; }
+  .brand .by { opacity:.62; letter-spacing:2px; }
   .masthead nav { display:flex; gap:20px; }
   .masthead a { font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#fbf3df; text-decoration:none; opacity:.92; text-shadow:0 1px 5px rgba(8,25,40,.8); }
   .masthead a:hover { color:#ffd76a; }
@@ -31,6 +35,9 @@
   .hero .kicker { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:#fbf3df; opacity:.95; margin-bottom:18px; text-shadow:0 1px 6px rgba(8,25,40,.8); }
   .hero h1 { font-size:clamp(42px,7.4vw,74px); line-height:1.02; font-weight:600; margin:0; color:#fff; letter-spacing:-0.8px; text-wrap:balance; max-width:14ch; text-shadow:0 1px 2px rgba(6,18,32,.6), 0 3px 30px rgba(6,18,32,.42); }
   .hero p { margin:26px 0 0; max-width:46ch; font-size:19px; color:#fbf3df; opacity:.97; text-shadow:0 1px 3px rgba(6,18,32,.8); }
+  /* the turn: sits with the h1, not with the body copy below it */
+  .hero p.deck { margin:14px 0 0; max-width:none; font-style:italic; font-weight:600; letter-spacing:-0.5px; line-height:1.1;
+    font-size:clamp(30px,5.2vw,50px); color:#ffd76a; text-shadow:0 1px 3px rgba(6,18,32,.7), 0 3px 26px rgba(6,18,32,.5); }
   .cue { margin-top:44px; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#fbf3df; opacity:.9; display:flex; align-items:center; gap:10px; text-shadow:0 1px 6px rgba(6,18,32,.8); }
   .cue .line { width:46px; height:1px; background:currentColor; }
 
@@ -71,8 +78,6 @@
   .lead { font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-size:clamp(21px,2.6vw,25px); line-height:1.4; letter-spacing:-0.2px; color:var(--ink); margin:0; text-wrap:pretty; }
   .lead b { color:var(--accent); font-weight:600; }
   .lead .muted { color:var(--ink-soft); }
-  .pull { margin:46px 0 0; padding:6px 0 6px 26px; border-left:3px solid var(--accent); font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-size:clamp(25px,3.6vw,33px); line-height:1.2; letter-spacing:-0.5px; font-weight:600; color:var(--ink); text-wrap:balance; }
-  .pull b { color:var(--accent); font-weight:600; }
   .vision { margin:30px 0 0; padding-top:26px; border-top:1px solid var(--edge); font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-size:clamp(18px,2.2vw,21px); line-height:1.46; color:var(--ink); }
   .vision b { color:var(--accent); font-weight:600; }
   .sides { display:grid; grid-template-columns:1fr 1fr; margin:26px 0 0; border-top:1px solid var(--edge); }
@@ -81,7 +86,6 @@
   .side:last-child { padding-left:34px; border-left:1px solid var(--edge); }
   .side-h { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:12px; }
   .side p { margin:0; font-size:16px; line-height:1.62; color:var(--ink-soft); }
-  .body-p { margin:26px 0 0; font-size:16.5px; line-height:1.66; color:var(--ink-soft); max-width:66ch; }
   .promises { list-style:none; margin:22px 0 0; padding:0; border-top:1px solid var(--edge); }
   .promises li { padding:16px 2px; border-bottom:1px solid var(--edge); font-size:16.5px; line-height:1.6; color:var(--ink); }
   .promises .k { color:var(--accent); font-weight:600; }
@@ -105,6 +109,42 @@
   .toc a.active .dot { background:#ffd76a; transform:scale(1.35); box-shadow:0 0 10px rgba(255,215,106,.65); }
   @media (max-width:1120px){ .toc { display:none; } }
 
+  /* right rail — the sounding line. carries one fact only (how deep you've read);
+     the left rail owns section nav, so this one gets no ticks and no labels. */
+  /* Fills the empty gutter right of the 780px column, scaling with the screen.
+     Height drives the box; width follows at the viewBox's exact 130/420 ratio, so the
+     ship scales uniformly instead of stretching. The three caps, in order:
+       78vh          — leave breathing room above/below on short screens
+       720px         — stop growing on very tall ones
+       (50vw-430px)  — the real gutter: never let the rail reach the text column.
+                       ×3.231 converts that width budget back into a height. */
+  .rail { --h: min(78vh, 720px, (50vw - 430px) * 3.231);
+    position:fixed; right:24px; top:50%; transform:translateY(-50%); z-index:5;
+    height:var(--h); width:calc(var(--h) * 0.3095); pointer-events:none; }
+  .rail svg { display:block; width:100%; height:100%; overflow:visible; }
+  /* the tack: a square-rigger can't sail straight downwind, so the route beats side to side.
+     both dot layers share one path + dasharray, so sailed dots land exactly on unsailed ones. */
+  .route, .route-sailed { fill:none; stroke:#ffd76a; stroke-width:3.2; stroke-linecap:round; stroke-dasharray:0.1 9; }
+  .route { opacity:.24; }
+  .route-sailed { filter:drop-shadow(0 0 4px rgba(255,215,106,.7)); }
+  /* Each section is one encounter, set by its heading's data-mark: an island to make,
+     a hostile sail to meet, or just a bare change of course. All dim until reached. */
+  .isle, .war { transition:color .35s ease, filter .35s ease; }
+  .isle { color:rgba(255,215,106,.32); }
+  .isle.lit { color:#ffd76a; filter:drop-shadow(0 0 6px rgba(255,215,106,.7)); }
+  .war { color:rgba(212,103,92,.34); }
+  .war.lit { color:#d4675c; filter:drop-shadow(0 0 6px rgba(212,103,92,.75)); }
+  @media (prefers-reduced-motion: reduce){ .isle, .war { transition:none; } }
+  .boat { color:#ffd76a; filter:drop-shadow(0 2px 6px rgba(6,18,32,.9)); }
+  .boat-bob { transform-box:fill-box; transform-origin:50% 74%; animation:bob 3.4s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform:rotate(-5deg); } 50% { transform:rotate(5deg); } }
+  .chest { color:rgba(255,215,106,.34); transform-box:fill-box; transform-origin:50% 50%;
+    transition:color .45s ease, filter .45s ease, transform .45s cubic-bezier(.2,.8,.2,1); }
+  /* the payoff: making port lights the gold */
+  .rail.arrived .chest { color:#ffd76a; transform:scale(1.14); filter:drop-shadow(0 0 10px rgba(255,215,106,.85)); }
+  @media (prefers-reduced-motion: reduce){ .boat-bob { animation:none; } .chest { transition:none; } }
+  @media (max-width:1120px), (max-height:560px){ .rail { display:none; } }
+
   footer { text-align:center; padding:40px 0 60px; color:#fbf3df; font-size:12px; letter-spacing:2px; text-transform:uppercase; text-shadow:0 1px 6px rgba(6,18,32,.8); }
 
   /* floating language toggle — stays top-right through the whole scroll */
@@ -116,6 +156,27 @@
   @media (max-width:560px){ .lang { top:14px; right:14px; } .lang button { padding:6px 11px; font-size:11px; } }
 
   a:focus-visible { outline:2px solid #ffd76a; outline-offset:3px; }
+
+  /* the killed Apply button — the essay's thesis as one image */
+  .apply-kill { margin-top:34px; display:inline-flex; align-items:center; gap:18px; flex-wrap:wrap; }
+  .apply-btn { position:relative; display:inline-block; font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#1a2430; background:#fbf3df; padding:13px 32px; border-radius:5px; }
+  .apply-btn svg { position:absolute; inset:-14% -6%; width:112%; height:128%; overflow:visible; pointer-events:none; }
+  .apply-btn svg path { stroke:#ffd76a; stroke-width:5; fill:none; stroke-linecap:round; stroke-dasharray:340; stroke-dashoffset:340; animation:strike .7s .9s ease forwards; }
+  @keyframes strike { to { stroke-dashoffset:0; } }
+  .apply-note { font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-style:italic; font-size:18px; color:#fbf3df; opacity:0; animation:fadein .8s 1.5s ease forwards; text-shadow:0 1px 6px rgba(6,18,32,.8); }
+  @keyframes fadein { to { opacity:.95; } }
+  @media (prefers-reduced-motion: reduce){
+    .apply-btn svg path { animation:none; stroke-dashoffset:0; }
+    .apply-note { animation:none; opacity:.95; }
+  }
+
+  /* full-bleed haymaker between posts — no card, just the sea and one line */
+  /* no card by design — a soft pool of dark instead, so the line reads over the horizon band */
+  .punch { position:relative; margin:0 0 9vh; text-align:center; padding:6vh 0; }
+  .punch::before { content:""; position:absolute; inset:-4vh -12%; pointer-events:none;
+    background:radial-gradient(60% 60% at 50% 50%, rgba(6,18,32,.82) 0%, rgba(6,18,32,.62) 45%, rgba(6,18,32,0) 100%); }
+  .punch p { position:relative; margin:0 auto; max-width:22ch; font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-size:clamp(28px,5vw,46px); line-height:1.14; font-weight:600; letter-spacing:-0.6px; color:#fff; text-wrap:balance; text-shadow:0 1px 3px rgba(6,18,32,.7), 0 3px 30px rgba(6,18,32,.5); }
+  .punch p b { color:#ffd76a; font-weight:600; font-style:italic; }
 
   @media (max-width:560px){
     .post { padding:32px 24px 34px; }
@@ -150,15 +211,80 @@
   <a href="#s-ambition" data-ko="<span class=&quot;dot&quot;></span>지향점"><span class="dot"></span>The ambition</a>
 </nav>
 
+<div class="rail" aria-hidden="true">
+  <svg viewBox="0 0 130 420">
+    <clipPath id="sailed"><rect id="sailedRect" x="0" y="0" width="130" height="0"/></clipPath>
+    <!-- the beat to windward: four tacks down the gutter, ending at the chest -->
+    <path id="route" class="route" d="M96 16 L26 106 L104 196 L28 286 L65 388"/>
+    <!-- same geometry, lit; JS copies d from #route so the two can't drift apart -->
+    <path id="routeSailed" class="route-sailed" clip-path="url(#sailed)"/>
+
+    <defs>
+      <!-- drawn from its own centre so JS can drop it at any turn.
+           currentColor lets the wrapping .isle carry the lit/unlit state through <use>. -->
+      <g id="isleArt">
+        <path d="M-11 5.5 q3.5 -10 11 -10 q7.5 0 11 10 z" fill="currentColor" stroke="none"/>
+        <path d="M0 -4.5 v-5.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M0 -10 q-5.5 -1 -7 3 M0 -10 q5.5 -1 7 3 M0 -10 q-3 -4.5 -7.5 -3.5 M0 -10 q3 -4.5 7.5 -3.5"
+              fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </g>
+      <!-- hostile sail: lean hull + lateen rig, deliberately unlike our square-rigged galleon -->
+      <g id="warArt">
+        <path d="M-12 3 h24 l-3 5.5 q-9 2.5 -18 0 z" fill="currentColor" stroke="none"/>
+        <path d="M-2 3 V-10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        <path d="M-1 -7.5 l8.5 9 h-8.5 z" fill="currentColor" stroke="none"/>
+        <path d="M-2 -10 h5.5 l-1.6 1.7 l1.6 1.7 h-5.5 z" fill="currentColor" stroke="none"/>
+      </g>
+    </defs>
+
+    <!-- one island per section heading; JS places them at the route's turning points -->
+    <g id="isles"></g>
+
+    <g class="boat">
+      <g class="boat-face">
+        <g class="boat-bob">
+          <g transform="translate(-18.5,-18.7)" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.5 26 V4.4"/>
+            <path d="M26 26 V12"/>
+            <path d="M5.6 10.4 h13.8"/>
+            <path d="M20.4 15 h11.2"/>
+            <path d="M6.2 10.4 h12.6 v6.6 q-6.3 2.9 -12.6 0 z" fill="currentColor" stroke="none"/>
+            <path d="M21 15 h10 v5.6 q-5 2.6 -10 0 z" fill="currentColor" stroke="none"/>
+            <path d="M12.5 4.4 h6.8 l-2.2 2.2 l2.2 2.2 h-6.8 z" fill="currentColor" stroke="none"/>
+            <path d="M4.5 25.4 l-3.2 -2.6"/>
+            <path d="M4 26 h26 v-4.6 h5.6 v4.6 l-4 7 q-12 3.4 -24 0 z" fill="currentColor" stroke="none"/>
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <g class="chest" transform="translate(51,388)">
+      <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+        <path d="M3.5 11 a10.5 7.5 0 0 1 21 0"/>
+        <rect x="3.5" y="11" width="21" height="10" rx="1.5"/>
+        <path d="M3.5 15 h21"/>
+        <rect x="11.5" y="12.6" width="5" height="5" rx="1" fill="currentColor" stroke="none"/>
+      </g>
+    </g>
+  </svg>
+</div>
+
 <div class="shell">
   <header class="masthead">
-    <div class="brand mono">⚓ Pirate <b>Network</b></div>
+    <div class="brand mono">⚓ Pirate <b>Ship</b> <span class="by">by MUST</span></div>
   </header>
 
   <section class="hero">
-    <div class="kicker mono" data-ko="에세이 · 2026">Essay · 2026</div>
-    <h1 class="serif" data-ko="에이전트 인재 네트워크.">The agent talent network.</h1>
-    <p data-ko="지난 인터넷 시대는 페이스북과 링크드인을 남겼습니다. 에이전트가 웹페이지를 대체하는 지금, 그중 무엇이 다시 만들어지고 — 무엇이 아직 비어 있을까요?">The last internet gave us Facebook and LinkedIn. As agents replace web pages, which of those gets rebuilt — and what's still missing?</p>
+    <div class="kicker mono" data-ko="해적 · 선원 · 열린 바다">Pirates · Sailors · The Open Sea</div>
+    <h1 class="serif" data-ko="모든 채용 플랫폼에는 지원 버튼이 있다.">Every hiring platform has an Apply button.</h1>
+    <p class="deck serif" data-ko="우리는 그것을 지운다.">We're deleting ours.</p>
+    <p data-ko="지난 인터넷은 페이스북과 링크드인을 남겼습니다. 에이전트가 웹페이지를 대체하는 지금, 인재의 자리는 비어 있습니다.">The last internet gave us Facebook and LinkedIn. As agents replace web pages, the talent seat sits empty.</p>
+    <div class="apply-kill" aria-hidden="true">
+      <span class="apply-btn">Apply
+        <svg viewBox="0 0 140 60" preserveAspectRatio="none"><path d="M6 44 C 40 30, 100 22, 134 12"/></svg>
+      </span>
+      <span class="apply-note" data-ko="— 다시는 없다.">— never again.</span>
+    </div>
     <div class="cue mono"><span class="line"></span> <span data-ko="역사에서 시작합니다">Start with the history</span></div>
   </section>
 
@@ -188,22 +314,27 @@
     <p class="mx-cap" data-ko="소셜 자리에는 이미 에이전트 시대의 주인공이 있습니다 — Moltbook. 하지만 <span class=&quot;mark&quot;>인재 자리는 여전히 비어 있습니다</span>.">The social seat already has its agent-era version — Moltbook. The <span class="mark">talent seat is still open</span>.</p>
 
     <h2 id="s-problem" data-ko="문제">The problem</h2>
-    <p class="lead" data-ko="오늘날의 채용은 <b>양쪽 모두에게</b> 어렵습니다.">Today's hiring process is difficult for <b>both sides</b>.</p>
+    <p class="lead" data-ko="채용은 <b>양쪽 모두</b>에게 어렵습니다.">Hiring is broken for <b>both sides</b>.</p>
     <div class="sides">
       <div class="side">
         <div class="side-h mono" data-ko="구직자">Job seekers</div>
-        <p data-ko="구직자는 역할과 책임, 문화, 장기적인 커리어 가치를 이해하기도 전에 유명한 이름부터 좇습니다 — 같은 지원을 반복하고, 제대로 된 조언은 받지 못한 채, 정작 더 잘 맞았을 기회는 놓칩니다.">They chase a famous name before understanding the role, its responsibilities, the culture, or its long-term career value — repeating the same applications, getting little guidance, and missing the opportunities that would actually suit them better.</p>
+        <p data-ko="로고를 좇습니다. 같은 지원을 반복합니다. 정작 잘 맞았을 자리를 놓칩니다.">Chase the logo. Repeat the same applications. Miss the roles that actually fit.</p>
       </div>
       <div class="side">
         <div class="side-h mono" data-ko="기업">Companies</div>
-        <p data-ko="기업은 반대편에서 같은 문제를 마주합니다. 이력서는 불완전한 그림만 보여주고, 면접에는 비용이 들며, 리크루터가 모든 팀의 실제 요구를 알 수는 없습니다 — 그래서 좋은 후보가 빠져나가고, 양쪽 모두 매칭으로 이어지지 않는 대화에 시간을 쏟습니다.">They face the same problem from the other side. Résumés give an incomplete picture, interviews are expensive, and recruiters can't know every team's real needs — so strong candidates slip through, and both sides pour time into conversations that never lead to a match.</p>
+        <p data-ko="이력서는 절반만 말합니다. 면접에는 비용이 듭니다. 리크루터가 모든 팀을 알 수는 없습니다.">Résumés tell half the story. Interviews cost. No recruiter knows every team.</p>
       </div>
     </div>
-    <p class="body-p" data-ko="AI가 일의 성격을 바꾸면서 커리어는 점점 예측하기 어려워지고, 사람들은 훨씬 더 자주 적응해야 합니다. 채용은 이력서와 채용 공고, 회사의 평판에 주로 기대는 느리고 일회성인 과정으로 남아 있을 수 없습니다.">As AI changes the nature of work, careers grow less predictable and people will need to adapt far more often. Hiring can't stay a slow, one-time process built mainly on résumés, job boards, and company reputation.</p>
+  </article>
 
+  <section class="punch">
+    <p data-ko="채용은 여전히 종이 한 장에 거는 <b>느린 단 한 번의 베팅</b>입니다.">Hiring is still one slow bet <b>on a piece of paper.</b></p>
+  </section>
+
+  <article class="post">
     <h2 id="s-what" data-ko="무엇인가">What it is</h2>
-    <p class="lead" data-ko="Pirate Network는 모든 사람과 모든 기업이 <b>AI 에이전트</b>로 대표될 수 있는 글로벌 커리어·채용 네트워크입니다.">Pirate Network will be a global career and hiring network where every person and every company can be represented by an <b>AI agent</b>.</p>
-    <p class="works" data-ko="이 에이전트들은 당사자를 대신해 쉼 없이 일합니다 —">These agents work continuously on their behalf —</p>
+    <p class="lead" data-ko="모든 사람과 모든 기업이 <b>AI 에이전트</b>로 대표되는 커리어·채용 네트워크.">A career and hiring network where every person and every company is represented by an <b>AI agent</b>.</p>
+    <p class="works" data-ko="에이전트는 당신 대신 쉼 없이 일합니다 —">Your agent works while you sleep —</p>
     <ul class="does">
       <li data-ko="역량과 전문성을 <span class=&quot;v&quot;>홍보</span>합니다"><span class="v">Marketing</span> your skills and expertise</li>
       <li data-ko="적합성을 <span class=&quot;v&quot;>논의</span>합니다"><span class="v">Discussing</span> fit</li>
@@ -213,53 +344,62 @@
     </ul>
 
     <h2 id="s-promise" data-ko="약속">The promise</h2>
-    <p class="lead" data-ko="Pirate Network는 커리어 발견과 채용을 <b>상시적</b>이고 <b>양방향</b>으로 만듭니다.">Pirate Network will make career discovery and hiring <b>continuous</b> and <b>two-sided</b>.</p>
+    <p class="lead" data-ko="커리어 발견과 채용을 <b>상시적</b>이고 <b>양방향</b>으로.">Career discovery and hiring, made <b>continuous</b> and <b>two-sided</b>.</p>
     <ul class="promises">
-      <li data-ko="<span class=&quot;k&quot;>구직자</span>는 자신이 무엇을 할 수 있는지, 무엇이 되고 싶은지, 어떤 기회가 자신을 앞으로 나아가게 하는지 이해하는 상시 활동형 커리어 대리인을 얻습니다."><span class="k">Job seekers</span> gain an always-active career representative that understands what they can do, what they want to become, and which opportunities could move them forward.</li>
-      <li data-ko="<span class=&quot;k&quot;>고용주</span>는 열려 있는 직무와 근무 조건, 기대치, 한계를 이해하는 상시 활동형 채용 대리인을 얻습니다."><span class="k">Employers</span> gain an always-active hiring representative that understands their open roles, working conditions, expectations, and limits.</li>
-      <li data-ko="<span class=&quot;k&quot;>기업 에이전트</span>는 방대한 잡음을 뒤지는 대신 명확하고 관련성 높은 후보를 전달받습니다."><span class="k">Company agents</span> receive clear, relevant candidates instead of searching through large volumes of noise.</li>
-      <li data-ko="<span class=&quot;k&quot;>주도권은 사람에게</span> — 에이전트가 반복적인 일을 처리하고, 판단과 신뢰, 약속이 필요한 순간에 사람을 부릅니다."><span class="k">People stay in charge</span> — agents do the repetitive work and bring humans in when judgment, trust, or commitment is required.</li>
+      <li data-ko="<span class=&quot;k&quot;>구직자</span>는 쉬지 않는 커리어 대리인을 얻습니다."><span class="k">Job seekers</span> gain a career agent that never clocks out.</li>
+      <li data-ko="<span class=&quot;k&quot;>고용주</span>는 자기 직무와 한계를 아는 채용 대리인을 얻습니다."><span class="k">Employers</span> gain a hiring agent that knows their roles and their limits.</li>
+      <li data-ko="<span class=&quot;k&quot;>기업 에이전트</span>는 잡음이 아니라 후보를 전달받습니다."><span class="k">Company agents</span> receive candidates, not noise.</li>
+      <li data-ko="<span class=&quot;k&quot;>주도권은 사람에게</span> — 판단과 신뢰, 약속의 순간에는 사람이 나섭니다."><span class="k">People stay in charge</span> — humans arrive for judgment, trust, and commitment.</li>
     </ul>
 
     <h2 id="s-diff" data-ko="차별점">What's different</h2>
     <div class="diffs">
       <div class="diff">
         <h3 data-ko="회사 이름보다 커리어 경로 먼저">Career path before company name</h3>
-        <p data-ko="로고의 명성이 아니라, 사람이 하고 싶은 일과 만들고 싶은 커리어에서 출발합니다.">It begins with the work a person wants to do and the career they want to build — not the prestige of a logo.</p>
+        <p data-ko="로고의 명성이 아니라 하고 싶은 일에서 출발합니다.">Starts with the work you want, not the prestige of a logo.</p>
       </div>
       <div class="diff">
         <h3 data-ko="정적인 프로필이 아닌 대화">Conversations, not static profiles</h3>
-        <p data-ko="적합성은 한 장의 이력서나 공고가 아니라 질문과 설명, 조언, 근거, 협상을 거치며 만들어집니다.">Fit develops through questions, clarification, advice, evidence, and negotiation — not a single résumé or job post.</p>
+        <p data-ko="적합성은 이력서 한 장이 아니라 질문과 근거, 협상에서 자랍니다.">Fit grows through questions, evidence, and negotiation — not one résumé.</p>
       </div>
       <div class="diff">
         <h3 data-ko="상호 매칭">Mutual matching</h3>
-        <p data-ko="사람이 회사에 맞아야 하는 만큼 회사도 사람에게 맞아야 합니다. 양쪽 모두 자신의 경계와 기대, 우선순위를 밝힙니다.">The company must fit the person as much as the person fits the company. Both sides state their boundaries, expectations, and priorities.</p>
+        <p data-ko="회사도 사람에게 맞아야 합니다. 양쪽 모두 경계를 밝힙니다.">The company must fit you too. Both sides state their limits.</p>
       </div>
       <div class="diff">
         <h3 data-ko="사람의 결정, AI의 지원">Human decisions, AI support</h3>
-        <p data-ko="AI는 반복적인 탐색과 초기 논의를 맡습니다. 사람은 개인정보와 핵심 판단, 약속에 대한 통제권을 지킵니다.">AI handles repetitive discovery and early discussion. People keep control over personal information, key judgments, and commitments.</p>
+        <p data-ko="AI는 탐색을 맡고, 사람은 개인정보와 판단, 약속을 지킵니다.">AI does the searching. You keep the data, the judgment, the commitment.</p>
       </div>
     </div>
+  </article>
+
+  <section class="punch">
+    <p data-ko="지원은 애원입니다. <b>해적질은 그들이 애원하게 만드는 것입니다.</b>">Applying is when you beg. <b>Pirating is when they beg.</b></p>
+  </section>
+
+  <article class="post">
 
     <h2 id="s-goal" data-ko="목표">The goal</h2>
-    <p class="lead" data-ko="<span class=&quot;muted&quot;>단순히 더 많은 일자리에 지원하도록 돕는 것이 아닙니다.</span> 저마다의 역량과 포부, 그리고 원하는 커리어 경로에 <b>맞는</b> 일을 찾도록 돕는 것 — 동시에 기업이 더 적은 지연과 비용, 불확실성으로 알맞은 인재를 찾도록 돕는 것입니다."><span class="muted">Not simply to help people apply to more jobs.</span> It is to help each person find work that <b>fits</b> their skills, ambitions, and desired career path — while helping companies find the right talent with less delay, cost, and uncertainty.</p>
+    <p class="lead" data-ko="<span class=&quot;muted&quot;>더 많이 지원하게 돕는 것이 아닙니다.</span> 당신에게 <b>맞는</b> 일을 찾는 것 — 그리고 기업이 더 적은 비용으로 알맞은 사람을 찾는 것입니다."><span class="muted">Not to help you apply to more jobs.</span> To find the work that <b>fits</b> you — and to find companies the right person for less.</p>
 
     <h2 id="s-ambition" data-ko="지향점">The ambition</h2>
-    <p class="lead" data-ko="Pirate Network는 매칭 실험에서 커리어와 기회, 신뢰할 수 있는 인재로 이뤄진 <b>살아 있는 네트워크</b>로 성장할 수 있습니다.">Pirate Network can grow from a matchmaking experiment into a <b>living network</b> of careers, opportunities, and trusted talent.</p>
+    <p class="lead" data-ko="매칭 실험에서 커리어와 기회, 신뢰로 이뤄진 <b>살아 있는 네트워크</b>로.">From a matchmaking experiment into a <b>living network</b> of careers, opportunities, and trust.</p>
     <div class="sides">
       <div class="side">
         <div class="side-h mono" data-ko="개인에게는">For individuals</div>
-        <p data-ko="가능성을 발견하고, 자신의 가치를 이해하며, 직업 생활 내내 더 나은 결정을 내리도록 돕는 커리어 동반자가 됩니다.">A career companion that helps them discover possibilities, understand their value, and make better decisions throughout their working life.</p>
+        <p data-ko="직업 생활 내내 함께 가는 커리어 동반자.">A career companion for your whole working life.</p>
       </div>
       <div class="side">
         <div class="side-h mono" data-ko="기업에게는">For companies</div>
-        <p data-ko="뛰어난 후보와의 관계를 따뜻하게 유지하는 살아 있는 인재 풀이 됩니다 — 필요가 생기는 바로 그 순간 알맞은 사람을 직무나 프로젝트, 팀에 배치하기 쉽게 만듭니다.">An active talent pool that keeps relationships with strong candidates warm — making it easier to place the right person into a role, project, or team the moment the need appears.</p>
+        <p data-ko="필요한 순간 바로 부를 수 있는, 따뜻하게 유지되는 인재 풀.">A talent pool kept warm, ready the moment the need appears.</p>
       </div>
     </div>
-    <p class="vision" data-ko="가장 큰 규모에서 Pirate Network는 <b>전통적인 프로페셔널 네트워크를 대체하는 AI 네이티브 대안</b>이 될 수 있습니다 — 프로필과 게시물보다, 유용한 대화와 검증된 적합성, 커리어 성장, 그리고 오래 가는 협업 관계에 집중하는.">At its largest scale, Pirate Network could become an <b>AI-native alternative to traditional professional networks</b> — less about profiles and posting, more about useful conversations, verified fit, career growth, and working relationships that last.</p>
-
-    <blockquote class="pull" data-ko="기회에 지원하지 마십시오. <b>기회가 당신을 찾아올 때까지 성장하십시오.</b>">You don't apply to opportunity. <b>You grow until it finds you.</b></blockquote>
+    <p class="vision" data-ko="가장 큰 규모에서 이것은 <b>프로페셔널 네트워크의 AI 네이티브 대안</b>입니다 — 프로필이 아니라 검증된 적합성으로.">At its largest scale: an <b>AI-native alternative to the professional network</b> — verified fit instead of profiles.</p>
   </article>
+
+  <section class="punch">
+    <p data-ko="기회에 지원하지 마십시오. <b>기회가 당신을 찾아올 때까지 성장하십시오.</b>">You don't apply to opportunity. <b>You grow until it finds you.</b></p>
+  </section>
 
   <footer class="mono" data-ko="Must Company 제작 · © 2026">Written by Must Company · © 2026</footer>
 </div>
@@ -308,6 +448,132 @@
       });
     }, { threshold: 0.15 });
     heads.forEach(function (h) { obs.observe(h); });
+  })();
+
+  // Right rail: a five-stop voyage down the gutter, drawn once.
+  // The stops are fixed points of the journey, not mirrors of the page's headings — so
+  // the route never moves and nothing here depends on the essay's structure.
+  //
+  // Everything is driven by y, not path length: the route only ever descends, so
+  // y = TOP + progress * (BOT - TOP) and x follows from it. The ship therefore reaches
+  // each stop exactly at that stop's scroll position, which measuring along the
+  // (longer) diagonal path length would not.
+  (function () {
+    var NS = 'http://www.w3.org/2000/svg';
+    var rail = document.querySelector('.rail');
+    if (!rail) return;
+    var route = document.getElementById('route');
+    var sailed = document.getElementById('routeSailed');
+    var boat = rail.querySelector('.boat');
+    var face = rail.querySelector('.boat-face');
+    var clip = document.getElementById('sailedRect');
+    var islesG = document.getElementById('isles');
+    if (!route || !sailed || !boat || !face || !clip || !islesG) return;
+
+    var TOP = 16, BOT = 384, LX = 32, RX = 96, CHEST_X = 65, MARK_OFF = 13;
+    // The voyage: landfall, a fight, open-water course change, landfall, a last fight,
+    // then the chest. 'turn' draws nothing — the change of course IS the event.
+    var STOPS = [
+      { p: 0.13, kind: 'isle' },
+      { p: 0.31, kind: 'war'  },
+      { p: 0.48, kind: 'turn' },
+      { p: 0.65, kind: 'isle' },
+      { p: 0.82, kind: 'war'  }
+    ];
+    var ART = { isle: '#isleArt', war: '#warArt' };
+
+    // vertices: open water, one turn per stop on alternating shores, then the chest
+    var pts = [{ x: RX, y: TOP }]
+      .concat(STOPS.map(function (s, i) {
+        return { x: (i % 2 === 0) ? LX : RX, y: TOP + s.p * (BOT - TOP) };
+      }))
+      .concat([{ x: CHEST_X, y: BOT }]);
+    var marks = [];
+
+    function build() {
+      // Smooth serpentine: each segment is a cubic whose handles are vertical at BOTH ends.
+      // Incoming and outgoing tangents therefore match at every vertex (C1), so the tacks
+      // round off into S-curves instead of corners — and y stays monotonic.
+      var d = 'M' + pts[0].x.toFixed(1) + ' ' + pts[0].y.toFixed(1);
+      for (var i = 0; i < pts.length - 1; i++) {
+        var a = pts[i], b = pts[i + 1], k = (b.y - a.y) / 2;
+        d += ' C' + a.x.toFixed(1) + ' ' + (a.y + k).toFixed(1) +
+             ' ' + b.x.toFixed(1) + ' ' + (b.y - k).toFixed(1) +
+             ' ' + b.x.toFixed(1) + ' ' + b.y.toFixed(1);
+      }
+      route.setAttribute('d', d);
+      sailed.setAttribute('d', d);
+      // each encounter sits just outside its turn, so the ship rounds it rather than covering it
+      STOPS.forEach(function (s, i) {
+        var href = ART[s.kind];
+        if (!href) return;
+        var v = pts[i + 1];
+        var g = document.createElementNS(NS, 'g');
+        g.setAttribute('class', s.kind);
+        g.setAttribute('transform', 'translate(' +
+          (v.x + (v.x === LX ? -MARK_OFF : MARK_OFF)).toFixed(1) + ',' + v.y.toFixed(1) + ')');
+        var u = document.createElementNS(NS, 'use');
+        u.setAttribute('href', href);
+        u.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', href);
+        g.appendChild(u);
+        islesG.appendChild(g);
+        marks.push({ p: s.p, el: g });
+      });
+    }
+
+    // Position + heading at a given depth on the curve.
+    // With vertical handles the segment reduces to:
+    //   y(t) = ay + h*(t^3 - 1.5t^2 + 1.5t)   strictly increasing (dy/dt >= 0.75h)
+    //   x(t) = ax + dx*t^2*(3 - 2t)           smoothstep
+    // y has no closed-form inverse worth writing, but it's monotonic, so bisect.
+    function atY(y) {
+      for (var i = 0; i < pts.length - 1; i++) {
+        var a = pts[i], b = pts[i + 1];
+        if (y <= b.y || i === pts.length - 2) {
+          var h = b.y - a.y;
+          if (h <= 0) return { x: b.x, ux: 0 };
+          var u = Math.min(1, Math.max(0, (y - a.y) / h));
+          var lo = 0, hi = 1, t = 0;
+          for (var n = 0; n < 24; n++) {
+            t = (lo + hi) / 2;
+            if (t * t * t - 1.5 * t * t + 1.5 * t < u) lo = t; else hi = t;
+          }
+          t = (lo + hi) / 2;
+          var dx = b.x - a.x;
+          var dxdt = dx * 6 * t * (1 - t);          // 0 at both ends -> ship comes about AT the island
+          var dydt = h * (3 * t * t - 3 * t + 1.5);
+          var len = Math.sqrt(dxdt * dxdt + dydt * dydt) || 1;
+          return { x: a.x + dx * (t * t * (3 - 2 * t)), ux: dxdt / len };
+        }
+      }
+      return { x: CHEST_X, ux: 0 };
+    }
+
+    var ticking = false;
+    function update() {
+      ticking = false;
+      if (pts.length < 2) return;
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var p = max > 0 ? Math.min(1, Math.max(0, window.pageYOffset / max)) : 0;
+      marks.forEach(function (m) { m.el.classList.toggle('lit', p >= m.p); });
+      var y = TOP + p * (BOT - TOP);
+      var at = atY(y);
+      // outer: sit on the route and heel into the tack
+      boat.setAttribute('transform', 'translate(' + at.x.toFixed(2) + ',' + y.toFixed(2) + ') rotate(' + (at.ux * 10).toFixed(2) + ')');
+      // inner: art is drawn facing left, so mirror it when the tack runs right
+      face.setAttribute('transform', 'scale(' + (at.ux >= 0 ? -0.92 : 0.92) + ',0.92)');
+      // reveal the dots astern of the ship
+      clip.setAttribute('height', y.toFixed(2));
+      rail.classList.toggle('arrived', p > 0.985);
+    }
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    // The route is fixed, but page height isn't: switching language changes copy length,
+    // which changes scroll range, which moves the ship. Only progress needs recomputing.
+    if ('ResizeObserver' in window) new ResizeObserver(onScroll).observe(document.body);
+    build();
+    update();
   })();
 
   // Language toggle: swap innerHTML of every [data-ko] element, English cached on load.
