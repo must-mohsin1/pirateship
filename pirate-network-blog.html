@@ -214,7 +214,10 @@
   .escrow-phase { justify-self:start; padding:var(--space-2xs) var(--space-xs); border:1px solid var(--edge); border-radius:var(--radius-sm); }
   .escrow-phase[data-phase="funding"], .escrow-phase[data-phase="released"] { border-color:var(--accent); color:var(--accent); }
   .escrow-phase[data-phase="refunds"] { border-color:var(--color-success); color:var(--color-success); }
-  .escrow-proof { grid-column:1 / -1; }
+  /* Release evidence row removed. Hidden (not deleted) because escrow.js keeps a hard
+     ref to #escrow-proof and does elements.proof.hidden=false on release — deleting the
+     markup would null-deref and freeze the live ledger. */
+  .escrow-proof { display:none !important; }
   .escrow-configuration { min-height:1.6em; margin:var(--space-sm) 0 0; color:var(--label); font-size:14px; }
 
   .escrow-workflow { list-style:none; margin:var(--space-xl) 0 0; padding:0; border-top:1px solid var(--edge); }
