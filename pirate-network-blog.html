@@ -1,4 +1,5 @@
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pirate Ship by MUST — a voyage journal</title>
 <link rel="stylesheet" href="tokens.css">
 <style>
@@ -144,7 +145,11 @@
   @media (prefers-reduced-motion: reduce){ .boat-bob { animation:none; } .chest { transition:none; } }
   @media (max-width:1120px), (max-height:560px){ .rail { display:none; } }
 
-  footer { text-align:center; padding:40px 0 60px; color:#fbf3df; font-size:12px; letter-spacing:2px; text-transform:uppercase; text-shadow:0 1px 6px rgba(6,18,32,.8); }
+  footer { text-align:center; padding:14px 0 60px; color:#fbf3df; font-size:12px; letter-spacing:2px; text-transform:uppercase; text-shadow:0 1px 6px rgba(6,18,32,.8); }
+  .footer-contact { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:14px; padding:40px 0 0; font-size:12px; letter-spacing:2px; text-transform:uppercase; }
+  .footer-contact a { color:#fbf3df; text-decoration:none; opacity:.92; text-shadow:0 1px 6px rgba(6,18,32,.8); transition:color .2s ease; }
+  .footer-contact a:hover { color:#ffd76a; }
+  .footer-contact .dot { color:var(--accent); opacity:.7; }
 
   /* floating language toggle — stays top-right through the whole scroll */
   .lang { position:fixed; top:22px; right:22px; z-index:6; display:flex; gap:2px; padding:4px; background:rgba(8,22,38,.58); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.16); border-radius:999px; box-shadow:0 10px 30px rgba(6,18,32,.5); font-family:ui-monospace,"SF Mono",Menlo,monospace; }
@@ -186,6 +191,23 @@
     .diffs { grid-template-columns:1fr; }
     .side:first-child { padding-right:0; }
     .side:last-child { padding-left:0; border-left:0; border-top:1px solid var(--edge); }
+  }
+
+  /* History matrix reflows before its 520px min-width can overflow the card (~664px viewport):
+     the era becomes a full-width row header with Social | Talent stacked beneath it, so both
+     columns — including the "??" open talent seat — show without a sideways scroll. Kept in its
+     own block after the 560 rules so its .stem/.seat padding wins there too. nth-child(3n) is the
+     empty-corner-shifted right column: Talent header, LinkedIn, the ?? seat. */
+  @media (max-width:680px){
+    .matrix-wrap { overflow-x:visible; }
+    .matrix { min-width:0; grid-template-columns:1fr 1fr; }
+    .matrix > .mx-h:first-child { display:none; }
+    .stem { grid-column:1 / -1; padding:16px 0 8px; }
+    .mx-h { padding:0 0 8px; }
+    .seat { padding:12px 0; }
+    .mx-h.col, .seat { border-left:0; }
+    .seat.ag { border-top:0; }
+    .matrix > :nth-child(3n) { border-left:1px solid var(--edge); padding-left:14px; }
   }
 
   /* ── grafted from the Amoy PR. tokens.css supplies every spacing, color and font token.
@@ -327,13 +349,40 @@
     <path id="routeSailed" class="route-sailed" clip-path="url(#sailed)"/>
 
     <defs>
-      <!-- drawn from its own centre so JS can drop it at any turn.
-           currentColor lets the wrapping .isle carry the lit/unlit state through <use>. -->
-      <g id="isleArt">
-        <path d="M-11 5.5 q3.5 -10 11 -10 q7.5 0 11 10 z" fill="currentColor" stroke="none"/>
-        <path d="M0 -4.5 v-5.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M0 -10 q-5.5 -1 -7 3 M0 -10 q5.5 -1 7 3 M0 -10 q-3 -4.5 -7.5 -3.5 M0 -10 q3 -4.5 7.5 -3.5"
-              fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      <!-- Four emblems of the recruiting voyage, each drawn from its own centre so JS can drop it
+           at any tack. currentColor lets the wrapping .isle carry the lit/unlit state through <use>. -->
+      <!-- 1 · Pirate Invitation — a wax-sealed letter -->
+      <g id="icoLetter" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round">
+        <rect x="-5.5" y="-8" width="11" height="15" rx="1.2"/>
+        <path d="M-3 -4.2 h6 M-3 -1.4 h6"/>
+        <circle cx="0" cy="3.8" r="2.1" fill="currentColor" stroke="none"/>
+      </g>
+      <!-- 2 · Peek their ship — a spyglass raised to the horizon -->
+      <g id="icoScope" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-linecap="round">
+        <g transform="rotate(-24)">
+          <path d="M-8 -2 L3 -3.2 L3 3.2 L-8 2 Z" fill="currentColor" stroke="none"/>
+          <path d="M3 -4 L7.5 -4.8 L7.5 4.8 L3 4 Z" fill="currentColor" stroke="none"/>
+        </g>
+      </g>
+      <!-- 3 · Reveal the treasure — a cut gem -->
+      <g id="icoGem" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M-4.5 -6.5 H4.5 L8 -2.5 L0 6.5 L-8 -2.5 Z"/>
+        <path d="M-8 -2.5 H8"/>
+        <path d="M-4.5 -6.5 L-1.7 -2.5 M4.5 -6.5 L1.7 -2.5 M-1.7 -2.5 L0 6.5 M1.7 -2.5 L0 6.5 M-1.7 -2.5 H1.7"/>
+      </g>
+      <!-- 4 · Come aboard — take the ship's helm -->
+      <g id="icoHelm" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M0 -8 V8 M-8 0 H8 M-5.7 -5.7 L5.7 5.7 M-5.7 5.7 L5.7 -5.7"/>
+        <circle cx="0" cy="0" r="4.6"/>
+        <circle cx="0" cy="0" r="1.5" fill="currentColor" stroke="none"/>
+        <circle cx="0" cy="-8" r="1.05" fill="currentColor" stroke="none"/>
+        <circle cx="0" cy="8" r="1.05" fill="currentColor" stroke="none"/>
+        <circle cx="-8" cy="0" r="1.05" fill="currentColor" stroke="none"/>
+        <circle cx="8" cy="0" r="1.05" fill="currentColor" stroke="none"/>
+        <circle cx="-5.7" cy="-5.7" r="1.05" fill="currentColor" stroke="none"/>
+        <circle cx="5.7" cy="5.7" r="1.05" fill="currentColor" stroke="none"/>
+        <circle cx="-5.7" cy="5.7" r="1.05" fill="currentColor" stroke="none"/>
+        <circle cx="5.7" cy="-5.7" r="1.05" fill="currentColor" stroke="none"/>
       </g>
     </defs>
 
@@ -671,6 +720,12 @@
     </p>
   </section>
 
+  <nav class="footer-contact mono" aria-label="Contact">
+    <a href="https://must.company/company" target="_blank" rel="noopener" data-ko="회사 웹사이트">Company Website</a>
+    <span class="dot" aria-hidden="true">·</span>
+    <a href="https://www.linkedin.com/company/must-company/posts/?feedView=all" target="_blank" rel="noopener" data-ko="회사 LinkedIn">Company LinkedIn</a>
+  </nav>
+
   <footer class="mono" data-ko="Must Company 제작 · © 2026">Written by Must Company · © 2026</footer>
 </div>
 
@@ -742,12 +797,13 @@
 
     var TOP = 16, BOT = 384, LX = 32, RX = 96, CHEST_X = 65, MARK_OFF = 13;
     // Getting pirated, step by step: the ship rounds a port at each stage of recruiting,
-    // then makes the treasure. Labels are short by necessity — the gutter is narrow.
+    // then makes the treasure. Each port carries its own emblem; names stack in two short
+    // lines because the gutter is narrow.
     var STOPS = [
-      { p: 0.16, label: 'INVITE' },   // the Pirate Invitation
-      { p: 0.38, label: 'PEEK'   },   // the Sailor's agent inspects the ship
-      { p: 0.60, label: 'REVEAL' },   // show the treasure — identity revealed
-      { p: 0.82, label: 'ABOARD' }    // join the ship
+      { p: 0.16, icon: '#icoLetter', label: ['PIRATE', 'INVITE']    },   // the Pirate Invitation
+      { p: 0.38, icon: '#icoScope',  label: ['PEEK', 'THE SHIP']    },   // peek into their ship
+      { p: 0.60, icon: '#icoGem',    label: ['REVEAL', 'TREASURE']  },   // reveal the treasure
+      { p: 0.82, icon: '#icoHelm',   label: ['COME', 'ABOARD']      }    // come aboard
     ];
 
     // vertices: open water, one turn per stop on alternating shores, then the chest
@@ -779,13 +835,16 @@
         g.setAttribute('transform', 'translate(' +
           (v.x + (v.x === LX ? -MARK_OFF : MARK_OFF)).toFixed(1) + ',' + v.y.toFixed(1) + ')');
         var u = document.createElementNS(NS, 'use');
-        u.setAttribute('href', '#isleArt');
-        u.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', '#isleArt');
+        u.setAttribute('href', s.icon);
+        u.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', s.icon);
         g.appendChild(u);
-        var t = document.createElementNS(NS, 'text');
-        t.setAttribute('y', '13.5');       // just under the island
-        t.textContent = s.label;
-        g.appendChild(t);
+        // the name stacks in two short lines just under the emblem
+        s.label.forEach(function (line, li) {
+          var t = document.createElementNS(NS, 'text');
+          t.setAttribute('y', (13.5 + li * 7).toFixed(1));
+          t.textContent = line;
+          g.appendChild(t);
+        });
         islesG.appendChild(g);
         marks.push({ p: s.p, el: g });
       });
