@@ -4,6 +4,7 @@ node_modules/
 .env.*
 !.env.example
 !.env.amoy.example
+!.env.mainnet-preflight.example
 data/
 *.db
 *.db-shm

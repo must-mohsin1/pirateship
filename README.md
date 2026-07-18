@@ -13,6 +13,8 @@ This repository contains the Pirate Network essay landing page plus a 30-day ref
 
 Release notes are tracked in [`CHANGELOG.md`](CHANGELOG.md). The remaining real-money launch blockers are tracked in [`TODOS.md`](TODOS.md), and the current checkpoint version is stored in [`VERSION`](VERSION).
 
+The step-by-step production gates are documented in [`docs/polygon-mainnet-runbook.md`](docs/polygon-mainnet-runbook.md). The included mainnet preflight is read-only: it validates public addresses, chain ID, review evidence, custody type, gas balance, compiler settings, and the immutable pledge conversion without accepting a private key or sending a transaction.
+
 ## Resume the Amoy checkpoint
 
 The repository now contains the complete tested flow. The integrated Node server serves both the landing page and `/api/*` from one origin, so product-key requests do not depend on development-only CORS configuration.
@@ -44,6 +46,14 @@ Refund eligibility activates automatically, but a blockchain contract cannot ini
 ### 1. Deploy the contract
 
 Deploy `contracts/RefundableProductEscrow.sol` to Polygon PoS mainnet only after the intended owner, beneficiary, and minimum pledge have passed an independent security review. The deploying wallet becomes the immutable owner, while the constructor beneficiary is the only wallet allowed to withdraw approved funds. Deployment starts the immutable 30-day clock and spends real POL. The existing `0.01` POL deployment is an Amoy rehearsal only; `250 POL` remains a proposal, not an approved production price.
+
+Before preparing any deployment transaction, copy `.env.mainnet-preflight.example` to the ignored `.env.mainnet-preflight`, complete the public review fields, and run:
+
+```sh
+npm --prefix services/product-key run preflight:mainnet
+```
+
+This check must report `READY_FOR_MANUAL_DEPLOYMENT_REVIEW`. It cannot deploy the contract. Follow the complete runbook before switching the public configuration away from Amoy.
 
 The minimum cannot be changed after deployment. The page reads the exact value from the contract instead of trusting a frontend-only setting. Polygon USDC support is intentionally deferred; this version accepts native POL only.
 
