@@ -1,0 +1,16 @@
+{
+  "name": "pirate-network-launch",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "services/product-key"
+  ],
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "check": "npm run check --workspace pirate-network-product-key-service && npm run test --workspace pirate-network-product-key-service",
+    "test": "npm run test --workspace pirate-network-product-key-service"
+  }
+}

@@ -73,9 +73,14 @@ test("API startup rejects an administrator token that is too short", () => {
   }
 });
 
-test("health requests are handled and unknown routes fall through", async () => {
+test("liveness and readiness requests are handled and unknown routes fall through", async () => {
   const app = fixture();
   try {
+    const live = await request(app.handler, "/api/live", { method: "GET" });
+    assert.equal(live.handled, true);
+    assert.equal(live.status, 200);
+    assert.deepEqual(live.body, { ok: true });
+
     const health = await request(app.handler, "/api/health", { method: "GET" });
     assert.equal(health.handled, true);
     assert.equal(health.status, 200);
@@ -240,7 +245,9 @@ test("entitlement-provider failures are hidden behind a generic server error", a
   console.error = () => {};
   const app = fixture({
     verifyEntitlement: async () => {
-      throw new Error("private RPC credential appeared in provider error");
+      const error = new Error("private RPC credential appeared in provider error");
+      error.status = 429;
+      throw error;
     },
   });
   const wallet = Wallet.createRandom();

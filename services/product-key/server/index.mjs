@@ -1,11 +1,17 @@
-import { chmodSync, createReadStream, mkdirSync, readFileSync } from "node:fs";
+import { chmodSync, createReadStream, mkdirSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import "../../../escrow-config.js";
 import { createApiHandler } from "./app.mjs";
 import { createContractVerifier } from "./contract-verifier.mjs";
-import { assertPublicContractMatches } from "./config-consistency.mjs";
+import { assertPublicDeploymentMatches } from "./config-consistency.mjs";
 import { KeyStore } from "./key-store.mjs";
+import {
+  integerEnvironment,
+  normalizePublicOrigin,
+  requireEnvironment,
+} from "./runtime-config.mjs";
 import { resolvePublicFile } from "./static-files.mjs";
 
 const serviceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -15,25 +21,35 @@ const databasePath =
   configuredDatabasePath === ":memory:"
     ? configuredDatabasePath
     : resolve(serviceRoot, configuredDatabasePath);
-const port = Number(process.env.PORT ?? 4173);
+const port = integerEnvironment(process.env, "PORT", "4173", 0);
 const host = process.env.HOST ?? "127.0.0.1";
-const publicOrigin = process.env.PUBLIC_ORIGIN ?? `http://127.0.0.1:${port}`;
+const publicOrigin = normalizePublicOrigin(
+  process.env.PUBLIC_ORIGIN ?? `http://127.0.0.1:${port}`,
+);
 const corsOrigin = process.env.CORS_ORIGIN?.trim() ?? "";
 const trustProxy = process.env.TRUST_PROXY === "true";
 
-for (const name of ["RPC_URL", "CONTRACT_ADDRESS", "ADMIN_TOKEN"]) {
-  if (!process.env[name]) {
-    throw new Error(`${name} is required. Copy .env.amoy.example to .env.amoy.`);
-  }
-}
+const rpcUrl = requireEnvironment(process.env, "RPC_URL");
+const contractAddress = requireEnvironment(process.env, "CONTRACT_ADDRESS");
+const adminToken = requireEnvironment(process.env, "ADMIN_TOKEN");
 if (publicOrigin.startsWith("https://") && !trustProxy) {
   throw new Error(
     "TRUST_PROXY=true is required behind the documented HTTPS reverse proxy. Block direct access and make the proxy overwrite forwarding headers.",
   );
 }
 
-const publicConfigSource = readFileSync(resolve(repoRoot, "escrow-config.js"), "utf8");
-assertPublicContractMatches(publicConfigSource, process.env.CONTRACT_ADDRESS);
+const publicEscrowConfig = globalThis.PIRATE_ESCROW_CONFIG;
+const publicChainId = Number(BigInt(publicEscrowConfig.chainId));
+const expectedChainId = integerEnvironment(
+  process.env,
+  "EXPECTED_CHAIN_ID",
+  String(publicChainId),
+);
+assertPublicDeploymentMatches(
+  publicEscrowConfig,
+  contractAddress,
+  expectedChainId,
+);
 
 process.umask(0o077);
 if (databasePath !== ":memory:") {
@@ -43,17 +59,32 @@ if (databasePath !== ":memory:") {
 const store = new KeyStore(databasePath);
 if (databasePath !== ":memory:") chmodSync(databasePath, 0o600);
 const verifyEntitlement = createContractVerifier({
-  rpcUrl: process.env.RPC_URL,
-  contractAddress: process.env.CONTRACT_ADDRESS,
-  timeoutMs: Number(process.env.RPC_TIMEOUT_MS ?? 10_000),
+  rpcUrl,
+  contractAddress,
+  expectedChainId,
+  timeoutMs: integerEnvironment(process.env, "RPC_TIMEOUT_MS", "10000"),
 });
 const apiHandler = createApiHandler({
   store,
   verifyEntitlement,
   publicOrigin,
-  adminToken: process.env.ADMIN_TOKEN,
-  verificationMaxConcurrent: Number(process.env.VERIFICATION_MAX_CONCURRENT ?? 8),
-  verificationMaxQueued: Number(process.env.VERIFICATION_MAX_QUEUED ?? 32),
+  adminToken,
+  verificationMaxConcurrent: integerEnvironment(
+    process.env,
+    "VERIFICATION_MAX_CONCURRENT",
+    "8",
+  ),
+  verificationMaxQueued: integerEnvironment(
+    process.env,
+    "VERIFICATION_MAX_QUEUED",
+    "32",
+    0,
+  ),
+  healthCheckTtlMs: integerEnvironment(
+    process.env,
+    "HEALTH_CHECK_TTL_MS",
+    "10000",
+  ),
   trustProxy,
 });
 

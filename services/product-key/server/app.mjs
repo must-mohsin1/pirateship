@@ -1,8 +1,23 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { getAddress, verifyMessage } from "ethers";
+import { logServerError } from "./safe-log.mjs";
 
 const MAX_BODY_BYTES = 32 * 1024;
+const MAX_ADMIN_KEYS = 1_000;
+const MAX_PRODUCT_KEY_CHARACTERS = 256;
+const MAX_JSON_BYTES_PER_CHARACTER = 6;
+const MAX_ADMIN_BODY_BYTES =
+  MAX_ADMIN_KEYS * (MAX_PRODUCT_KEY_CHARACTERS * MAX_JSON_BYTES_PER_CHARACTER + 3) +
+  32;
 const RATE_LIMIT_SWEEP_INTERVAL_MS = 5_000;
+const MAX_READINESS_FAILURE_CACHE_MS = 2_000;
+
+function exposedRequestError(message, status) {
+  const error = new Error(message);
+  error.status = status;
+  error.exposeToClient = true;
+  return error;
+}
 
 function sendJson(response, status, payload) {
   const body = JSON.stringify(payload);
@@ -16,15 +31,13 @@ function sendJson(response, status, payload) {
   response.end(body);
 }
 
-async function readJson(request) {
+async function readJson(request, maxBytes = MAX_BODY_BYTES) {
   let size = 0;
   const chunks = [];
   for await (const chunk of request) {
     size += chunk.length;
-    if (size > MAX_BODY_BYTES) {
-      const error = new Error("Request body is too large.");
-      error.status = 413;
-      throw error;
+    if (size > maxBytes) {
+      throw exposedRequestError("Request body is too large.", 413);
     }
     chunks.push(chunk);
   }
@@ -32,9 +45,7 @@ async function readJson(request) {
   try {
     return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
   } catch {
-    const error = new Error("Request body must contain valid JSON.");
-    error.status = 400;
-    throw error;
+    throw exposedRequestError("Request body must contain valid JSON.", 400);
   }
 }
 
@@ -88,6 +99,7 @@ function createVerificationPool(worker, maxConcurrent, maxQueued) {
       if (queue.length >= maxQueued) {
         const error = new Error("Wallet verification is temporarily busy.");
         error.status = 503;
+        error.safeStatus = true;
         reject(error);
         return;
       }
@@ -107,6 +119,7 @@ export function createApiHandler({
   rateLimitMaxClients = 10_000,
   verificationMaxConcurrent = 8,
   verificationMaxQueued = 32,
+  healthCheckTtlMs = 10_000,
   trustProxy = false,
   now = () => Date.now(),
 }) {
@@ -119,6 +132,15 @@ export function createApiHandler({
   if (!Number.isInteger(verificationMaxQueued) || verificationMaxQueued < 0) {
     throw new Error("VERIFICATION_MAX_QUEUED must be a non-negative integer.");
   }
+  if (!Number.isInteger(rateLimitWindowMs) || rateLimitWindowMs < 1) {
+    throw new Error("RATE_LIMIT_WINDOW_MS must be a positive integer.");
+  }
+  if (!Number.isInteger(rateLimitMax) || rateLimitMax < 1) {
+    throw new Error("RATE_LIMIT_MAX must be a positive integer.");
+  }
+  if (!Number.isInteger(healthCheckTtlMs) || healthCheckTtlMs < 1) {
+    throw new Error("HEALTH_CHECK_TTL_MS must be a positive integer.");
+  }
 
   const rateLimits = new Map();
   const verifyWithCapacity = createVerificationPool(
@@ -127,8 +149,39 @@ export function createApiHandler({
     verificationMaxQueued,
   );
   let lastRateLimitSweep = 0;
+  let readinessExpiresAt = 0;
+  let readinessFailureExpiresAt = 0;
+  let readinessFailure;
+  let readinessCheck;
 
-  function exceedsRateLimit(request) {
+  async function checkReadiness() {
+    const timestamp = now();
+    if (readinessExpiresAt > timestamp) return;
+    if (readinessFailureExpiresAt > timestamp) throw readinessFailure;
+    if (!readinessCheck) {
+      readinessCheck = (async () => {
+        try {
+          if (typeof store.healthCheck === "function") await store.healthCheck();
+          if (typeof verifyEntitlement.healthCheck === "function") {
+            await verifyEntitlement.healthCheck();
+          }
+          readinessFailure = undefined;
+          readinessFailureExpiresAt = 0;
+          readinessExpiresAt = now() + healthCheckTtlMs;
+        } catch (error) {
+          readinessFailure = error;
+          readinessFailureExpiresAt =
+            now() + Math.min(healthCheckTtlMs, MAX_READINESS_FAILURE_CACHE_MS);
+          throw error;
+        }
+      })().finally(() => {
+        readinessCheck = undefined;
+      });
+    }
+    await readinessCheck;
+  }
+
+  async function exceedsRateLimit(request) {
     const forwarded = trustProxy ? request.headers["x-forwarded-for"] : null;
     const forwardedAddresses =
       typeof forwarded === "string"
@@ -139,6 +192,9 @@ export function createApiHandler({
       request.socket?.remoteAddress ??
       "unknown-client";
     const timestamp = now();
+    if (typeof store.takeRateLimit === "function") {
+      return store.takeRateLimit(key, timestamp, rateLimitWindowMs, rateLimitMax);
+    }
     if (
       timestamp - lastRateLimitSweep >=
       Math.min(rateLimitWindowMs, RATE_LIMIT_SWEEP_INTERVAL_MS)
@@ -162,7 +218,13 @@ export function createApiHandler({
     const url = new URL(request.url, publicOrigin);
 
     try {
+      if (request.method === "GET" && url.pathname === "/api/live") {
+        sendJson(response, 200, { ok: true });
+        return true;
+      }
+
       if (request.method === "GET" && url.pathname === "/api/health") {
+        await checkReadiness();
         sendJson(response, 200, { ok: true });
         return true;
       }
@@ -170,10 +232,10 @@ export function createApiHandler({
       if (
         request.method === "POST" &&
         ["/api/auth/challenge", "/api/keys/redeem"].includes(url.pathname) &&
-        exceedsRateLimit(request)
+        await exceedsRateLimit(request)
       ) {
         sendJson(response, 429, {
-          error: "Too many wallet-verification requests. Wait ten minutes and try again.",
+          error: "Too many wallet-verification requests. Wait and try again later.",
         });
         return true;
       }
@@ -198,7 +260,7 @@ export function createApiHandler({
           expiresAt,
           publicOrigin,
         });
-        store.putChallenge(challengeId, address, message, expiresAt, now());
+        await store.putChallenge(challengeId, address, message, expiresAt, now());
         sendJson(response, 200, { challengeId, address, message, expiresAt });
         return true;
       }
@@ -223,7 +285,7 @@ export function createApiHandler({
           return true;
         }
 
-        const challenge = store.getChallenge(challengeId, address);
+        const challenge = await store.getChallenge(challengeId, address);
         if (!challenge || challenge.used || challenge.expiresAt < now()) {
           sendJson(response, 401, {
             error: "The verification request expired or was already used. Request a new signature.",
@@ -248,7 +310,7 @@ export function createApiHandler({
           return true;
         }
 
-        if (!store.consumeChallenge(challengeId, address, challenge.message, now())) {
+        if (!(await store.consumeChallenge(challengeId, address, challenge.message, now()))) {
           sendJson(response, 409, {
             error: "That verification request was already used. Request a new signature.",
           });
@@ -264,7 +326,7 @@ export function createApiHandler({
           return true;
         }
 
-        const assignment = store.assignKey(address, now());
+        const assignment = await store.assignKey(address, now());
         if (!assignment) {
           sendJson(response, 503, {
             error: "No product keys are available yet. The project owner must add inventory.",
@@ -282,13 +344,13 @@ export function createApiHandler({
           return true;
         }
 
-        const body = await readJson(request);
+        const body = await readJson(request, MAX_ADMIN_BODY_BYTES);
         if (
           !body ||
           typeof body !== "object" ||
           !Array.isArray(body.keys) ||
           body.keys.length === 0 ||
-          body.keys.length > 1_000
+          body.keys.length > MAX_ADMIN_KEYS
         ) {
           sendJson(response, 400, {
             error: "Provide between 1 and 1,000 product keys in the keys array.",
@@ -297,7 +359,10 @@ export function createApiHandler({
         }
         if (
           body.keys.some(
-            (key) => typeof key !== "string" || !key.trim() || key.trim().length > 256,
+            (key) =>
+              typeof key !== "string" ||
+              !key.trim() ||
+              key.trim().length > MAX_PRODUCT_KEY_CHARACTERS,
           )
         ) {
           sendJson(response, 400, {
@@ -306,17 +371,27 @@ export function createApiHandler({
           return true;
         }
 
-        const inserted = store.addKeys(body.keys);
-        sendJson(response, 200, { inserted, inventory: store.stats() });
+        const inserted = await store.addKeys(body.keys);
+        sendJson(response, 200, { inserted, inventory: await store.stats() });
         return true;
       }
 
       return false;
     } catch (error) {
-      console.error(error);
-      sendJson(response, error.status ?? 500, {
+      logServerError("Product-key request failed.", error);
+      const exposeToClient =
+        error?.exposeToClient === true &&
+        Number.isInteger(error.status) &&
+        error.status >= 400 &&
+        error.status < 500;
+      const safeStatus =
+        error?.safeStatus === true &&
+        Number.isInteger(error.status) &&
+        error.status >= 400 &&
+        error.status <= 599;
+      sendJson(response, exposeToClient || safeStatus ? error.status : 500, {
         error:
-          error.status && error.status < 500
+          exposeToClient
             ? error.message
             : "The product-key service could not complete the request. Try again shortly.",
       });

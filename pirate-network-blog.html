@@ -37,8 +37,9 @@
   .brand b { color:var(--accent); }
   .brand .by { opacity:.62; letter-spacing:2px; }
   .masthead nav { display:flex; gap:20px; }
-  .masthead a { font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#eae4d2; text-decoration:none; opacity:.92; text-shadow:0 1px 5px rgba(7,18,32,.8); }
+  .masthead a { min-height:44px; padding:0 10px; display:inline-flex; align-items:center; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#eae4d2; text-decoration:none; opacity:.92; text-shadow:0 1px 5px rgba(7,18,32,.8); }
   .masthead a:hover { color:var(--accent); }
+  @media (max-width:920px){ .masthead { padding-top:72px; } }
 
   .hero { min-height:80vh; display:flex; flex-direction:column; justify-content:center; padding:40px 0; }
   .hero .kicker { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:#eae4d2; opacity:.95; margin-bottom:18px; text-shadow:0 1px 6px rgba(7,18,32,.8); }
@@ -428,6 +429,7 @@
   <a href="#s-diff" data-ko="<span class=&quot;dot&quot;></span>차별점"><span class="dot"></span>What's different</a>
   <a href="#s-goal" data-ko="<span class=&quot;dot&quot;></span>목표"><span class="dot"></span>The goal</a>
   <a href="#s-ambition" data-ko="<span class=&quot;dot&quot;></span>지향점"><span class="dot"></span>The ambition</a>
+  <a href="#preorder" data-ko="<span class=&quot;dot&quot;></span>사전 주문"><span class="dot"></span>Pre-order</a>
 </nav>
 
 <div class="rail" aria-hidden="true">
@@ -512,6 +514,9 @@
 <div class="shell">
   <header class="masthead">
     <div class="brand mono"><svg class="mark" viewBox="0 0 52 44" role="img" aria-label="MUST" fill="none"><g><rect x="3" y="6" width="8" height="27" rx="4" fill="#eae4d2"/><path d="M11 6 L19 9.5 L11 13 Z" fill="#eae4d2"/><rect x="17" y="6" width="8" height="27" rx="4" fill="#eae4d2"/><path d="M25 6 L33 9.5 L25 13 Z" fill="#eae4d2"/><rect x="31" y="6" width="8" height="27" rx="4" fill="var(--accent)"/><path d="M39 6 L48 9.5 L39 13 Z" fill="var(--accent)"/></g><g stroke="#9aa2a8" stroke-width="2.2" stroke-linecap="round"><path d="M3 37 Q10 33 17 37 T31 37 T45 37"/></g></svg> Pirate <b>Ship</b> <span class="by">by MUST</span></div>
+    <nav class="mono" aria-label="Launch">
+      <a href="#preorder" data-ko="사전 주문">Pre-order</a>
+    </nav>
   </header>
 
   <section class="hero">
@@ -790,11 +795,11 @@
     <header class="preorder-header">
       <p class="preorder-kicker" data-ko="창립 리허설 · 폴리곤 Amoy 테스트넷">Founding rehearsal · Polygon Amoy testnet</p>
       <h2 id="s-preorder" data-ko="출시를 후원하세요. 환불 권리는 지키세요.">Back the launch. Keep the refund.</h2>
-      <p class="preorder-message" data-ko="Pirate Network는 에이전트 시대에 맞게 채용을 다시 만들려는 시도입니다. 이 도전을 돕고 싶다면 아래 스마트 계약을 통해 사전 주문해 주세요. 저희는 30일 안에 제품과 Product Hunt 출시 증거를 공개합니다. 출시 후 제품을 받아들일 때만 승인하세요. 승인은 제품 키를 열고 오직 본인의 예치금만 팀에 전달합니다. 기한까지 승인하지 않으면 전액은 같은 지갑으로 환불 가능한 상태로 남습니다.">
+      <p class="preorder-message" data-ko="Pirate Network는 에이전트 시대에 맞게 채용을 다시 만들려는 시도입니다. 이 도전을 돕고 싶다면 아래 스마트 계약을 통해 사전 주문해 주세요. 저희는 30일 안에 제품과 Product Hunt 출시 증거를 공개합니다. 출시 후 제품을 받아들일 때만 승인하세요. 승인하면 사용 가능한 제품 키를 받을 자격이 생기고 오직 본인의 예치금만 팀에 전달됩니다. 기한까지 승인하지 않으면 전액은 같은 지갑으로 환불 가능한 상태로 남습니다.">
         Pirate Network is an attempt to rebuild hiring for the agent era. If you want to help us
         test it, place a pre-order through the smart contract below. We have 30 days to publish the
         product and its Product Hunt release evidence. After release, <strong>approve only if you
-        accept the product</strong>. Approval unlocks your product key and releases only your pledge.
+        accept the product</strong>. Approval makes your wallet eligible to retrieve an available product key and releases only your pledge.
         If you do not approve by the deadline, your full pledge remains refundable to the same wallet.
       </p>
       <p class="refund-truth" data-ko="<strong>‘자동 환불’의 정확한 의미:</strong> 기한이 지나면 환불 권리가 자동으로 활성화됩니다. 블록체인 계약은 스스로 거래를 시작할 수 없으므로, 본인이나 자동화 봇이 환불 거래를 제출해야 합니다. 누구나 대신 실행할 수 있지만 자금은 사전 주문한 지갑으로만 돌아갑니다.">
@@ -873,7 +878,7 @@
         <span class="escrow-step-number">4.0</span>
         <div>
           <h3 data-ko="키 또는 환불">Receive the key or refund</h3>
-          <p data-ko="승인하면 서명 확인 후 제품 키를 받습니다. 승인하지 않으면 마감 후 전액 환불을 청구할 수 있습니다.">Approval enables wallet-verified product-key access. Without approval, the full pledge becomes refundable after the deadline.</p>
+          <p data-ko="승인하면 서명 확인 후 사용 가능한 제품 키에 접근할 수 있습니다. 승인하지 않으면 마감 후 전액 환불을 청구할 수 있습니다.">Approval enables wallet-verified access to an available product key. Without approval, the full pledge becomes refundable after the deadline.</p>
         </div>
         <span class="escrow-step-state" lang="en">Waiting</span>
       </li>
@@ -935,7 +940,7 @@
         </section>
 
         <section class="escrow-key-panel" id="escrow-key-panel" aria-labelledby="escrow-key-title" hidden>
-          <h3 id="escrow-key-title" data-ko="제품 키를 받을 수 있습니다.">Your product key is ready.</h3>
+          <h3 id="escrow-key-title" data-ko="제품 키를 받을 수 있습니다.">Your wallet can retrieve a product key.</h3>
           <p class="escrow-key-note" data-ko="승인된 지갑은 짧고 만료되는 메시지에 서명합니다. 메시지 서명은 무료이며 자금을 이동할 수 없습니다. 지갑에서 항상 메시지를 먼저 읽으세요.">An approved wallet signs a short, expiring message. Message signing is free and cannot move funds—always read it in your wallet first.</p>
           <button class="escrow-button" id="escrow-key" type="button" disabled data-ko="제품 키 받기" data-live lang="en">Get product key</button>
           <div class="escrow-key-result" id="escrow-key-result" hidden>

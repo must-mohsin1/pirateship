@@ -16,9 +16,19 @@ test("challenges are single-use and expire", () => {
 
 test("product keys are assigned atomically and remain stable per wallet", () => {
   const store = new KeyStore();
-  assert.deepEqual(store.stats(), { total: 0, available: 0, assigned: 0 });
+  assert.deepEqual(store.stats(), {
+    total: 0,
+    available: 0,
+    assigned: 0,
+    quarantined: 0,
+  });
   assert.equal(store.addKeys(["HR-ONE", "HR-TWO", "HR-ONE"]), 2);
-  assert.deepEqual(store.stats(), { total: 2, available: 2, assigned: 0 });
+  assert.deepEqual(store.stats(), {
+    total: 2,
+    available: 2,
+    assigned: 0,
+    quarantined: 0,
+  });
 
   assert.deepEqual(store.assignKey("0xaaa", 10), {
     productKey: "HR-ONE",
@@ -33,7 +43,12 @@ test("product keys are assigned atomically and remain stable per wallet", () => 
     existing: false,
   });
   assert.equal(store.assignKey("0xccc", 13), null);
-  assert.deepEqual(store.stats(), { total: 2, available: 0, assigned: 2 });
+  assert.deepEqual(store.stats(), {
+    total: 2,
+    available: 0,
+    assigned: 2,
+    quarantined: 0,
+  });
   store.close();
 });
 

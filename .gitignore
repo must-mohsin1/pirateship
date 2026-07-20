@@ -7,6 +7,7 @@ node_modules/
 !.env.docker.example
 !.env.aws.example
 !.env.mainnet-preflight.example
+!.env.vercel.example
 data/
 *.db
 *.db-shm

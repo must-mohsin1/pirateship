@@ -118,7 +118,12 @@ test("an unapproved wallet cannot consume product-key inventory", async () => {
       signature,
     });
     assert.equal(redemption.status, 403);
-    assert.deepEqual(app.store.stats(), { total: 1, available: 1, assigned: 0 });
+    assert.deepEqual(app.store.stats(), {
+      total: 1,
+      available: 1,
+      assigned: 0,
+      quarantined: 0,
+    });
   } finally {
     app.close();
   }
@@ -164,5 +169,55 @@ test("wallet-verification endpoints are rate limited", async () => {
     );
   } finally {
     app.close();
+  }
+});
+
+test("the administrator endpoint accepts its documented 1,000-key batch", async () => {
+  const app = await fixture(true);
+  const keys = Array.from(
+    { length: 1_000 },
+    (_, index) => `${String(index).padStart(4, "0")}${"é".repeat(252)}`,
+  );
+  assert.ok(Buffer.byteLength(JSON.stringify({ keys })) > 300 * 1024);
+
+  try {
+    const response = await post(
+      app.handler,
+      "/api/admin/keys",
+      { keys },
+      ADMIN_TOKEN,
+    );
+    assert.equal(response.status, 200);
+    assert.equal(response.body.inserted, 1_000);
+    assert.deepEqual(response.body.inventory, {
+      total: 1_000,
+      available: 1_000,
+      assigned: 0,
+      quarantined: 0,
+    });
+  } finally {
+    app.close();
+  }
+});
+
+test("invalid rate-limit configuration fails closed", () => {
+  const store = new KeyStore();
+  const options = {
+    store,
+    verifyEntitlement: async () => ({ eligible: true }),
+    publicOrigin: "http://127.0.0.1",
+    adminToken: ADMIN_TOKEN,
+  };
+  try {
+    assert.throws(
+      () => createApiHandler({ ...options, rateLimitMax: Number.NaN }),
+      /RATE_LIMIT_MAX must be a positive integer/,
+    );
+    assert.throws(
+      () => createApiHandler({ ...options, rateLimitWindowMs: 0 }),
+      /RATE_LIMIT_WINDOW_MS must be a positive integer/,
+    );
+  } finally {
+    store.close();
   }
 });

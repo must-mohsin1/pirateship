@@ -2,6 +2,28 @@
 
 All notable changes to Pirate Network are documented in this file.
 
+## [0.2.0.0] - 2026-07-20
+
+### Added
+
+- The deployed landing-page origin can now serve wallet challenges, approved-wallet product-key redemption, readiness checks, and authenticated inventory administration through Vercel Functions backed by Upstash Redis.
+- Operators can import up to 1,000 keys at once, monitor quarantined inventory, and restore a clean backup copy after corrupt encrypted inventory is isolated.
+- Repository-root Node 22 checks now validate the contract, browser journey, local service, Vercel routes, Redis coordination, and deployment configuration in CI.
+- Desktop and compact navigation now link directly to the refundable pre-order section with a touch-friendly mobile target.
+
+### Changed
+
+- Product-key storage supports asynchronous shared adapters while preserving the local SQLite workflow, and shared Redis now coordinates expiring challenges, cross-instance rate limits, and atomic stable key assignment.
+- Production startup pins the backend to the same Polygon contract and chain as the public landing page, validates numeric safety limits, bounds upstream calls, and separates container liveness from dependency readiness.
+- Redis inventory uses versioned AES-256-GCM encryption, revalidates its namespace key before mutation, quarantines corrupt ciphertext safely, and supports normal re-import from backup.
+- The Amoy rehearsal now states that approval creates eligibility for an available key; mainnet remains blocked until an enforceable one-key-per-supporter guarantee is designed and tested.
+
+### Fixed
+
+- Upstream RPC and Redis failures can no longer expose authenticated URLs or provider messages through API responses or production logs.
+- Successful and failed readiness checks are briefly cached to reduce unauthenticated dependency-call amplification during normal polling and outages.
+- Vercel rate limiting trusts the platform-provided client address instead of a caller-controlled forwarding-header value.
+
 ## [0.1.2.0] - 2026-07-18
 
 ### Added

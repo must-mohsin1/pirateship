@@ -155,7 +155,7 @@ export class KeyStore {
         FROM product_keys
       `)
       .get();
-    return { ...result };
+    return { ...result, quarantined: 0 };
   }
 
   close() {

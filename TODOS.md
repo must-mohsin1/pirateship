@@ -19,13 +19,15 @@ The Amoy rehearsal is complete. Do not accept real Polygon mainnet funds until e
 
 ## Product and pricing
 
+- [ ] Guarantee one product key for every supporter before mainnet approval can irreversibly release a pledge. Choose an enforceable reservation or unlimited-license design, then test inventory exhaustion and concurrent approvals end to end.
 - [ ] Approve the mainnet minimum pledge with finance/legal review. `250 POL` is only a proposal; Polygon USDC pricing remains intentionally deferred.
 - [ ] Publish objective, supporter-visible acceptance criteria for “product released” and the exact Product Hunt or product URL that may be recorded as proof.
 - [ ] Complete the Korean localization of live escrow controls and wallet/error states; the Amoy transaction controls currently remain explicitly English.
 
 ## Production service
 
-- [ ] Replace process-local rate limits and wallet challenges with shared TTL storage, cross-instance per-wallet issuance coordination, and a trusted-proxy policy.
-- [ ] Move product keys to encrypted persistent storage with restricted service credentials, tested backups, inventory monitoring, and a documented recovery procedure.
+- [x] Add Vercel Functions backed by shared Redis TTL challenges, shared rate limits, and atomic cross-instance per-wallet issuance coordination.
+- [x] Encrypt Redis product-key inventory with a server-only AES-256-GCM key before storage.
+- [ ] Provision the production Redis integration, restrict its credentials, enable persistence/backups, add inventory monitoring, and test the recovery procedure.
 - [ ] Use a dedicated authenticated Polygon RPC, reduce campaign-read bursts, and monitor provider throttling and chain reorganizations.
 - [ ] Run end-to-end staging tests for wrong-network switching, receipt timeout/revert recovery, CORS/proxy behavior, graceful shutdown, and concurrent key redemption.
