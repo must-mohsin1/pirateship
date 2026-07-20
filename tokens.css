@@ -1,0 +1,85 @@
+:root {
+  color-scheme: dark;
+
+  --color-sea: oklch(31% 0.05 250);
+  --color-paper: oklch(24% 0.04 250);
+  --color-paper-2: oklch(28% 0.045 250);
+  --color-paper-3: oklch(32% 0.05 250);
+  --color-input: oklch(19% 0.035 250);
+  --color-ink: oklch(91% 0.028 92);
+  --color-ink-bright: oklch(96% 0.022 92);
+  --color-neutral: oklch(76% 0.022 130);
+  --color-muted: oklch(68% 0.025 150);
+  --color-label: oklch(70% 0.03 150);
+  --color-accent: oklch(81% 0.18 152);
+  --color-accent-strong: oklch(88% 0.16 152);
+  --color-accent-ink: oklch(20% 0.04 250);
+  --color-focus: oklch(85% 0.16 152);
+  --color-success: oklch(79% 0.11 148);
+  --color-error: oklch(70% 0.14 28);
+  --color-edge: oklch(80% 0.022 100 / 0.16);
+  --color-edge-strong: oklch(82% 0.03 100 / 0.34);
+  --color-overlay-soft: oklch(10% 0.03 250 / 0.46);
+  --color-overlay-light: oklch(10% 0.03 250 / 0.14);
+  --color-overlay-clear: oklch(10% 0.03 250 / 0);
+  --color-overlay-top: oklch(10% 0.03 250 / 0.34);
+  --color-overlay-mid: oklch(10% 0.03 250 / 0.08);
+  --color-overlay-deep: oklch(10% 0.03 250 / 0.62);
+  --color-panel-translucent: oklch(16% 0.035 250 / 0.72);
+  --color-shadow: oklch(6% 0.02 250 / 0.6);
+
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: var(--font-body);
+
+  --space-3xs: 0.125rem;
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+  --space-4xl: 9rem;
+
+  --text-xs: 0.64rem;
+  --text-sm: 0.8rem;
+  --text-base: 1rem;
+  --text-md: 1.25rem;
+  --text-lg: 1.5625rem;
+  --text-xl: 1.9531rem;
+  --text-2xl: 2.4414rem;
+  --text-display: clamp(2.625rem, 7.4vw, 4.625rem);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+
+  --rule-hair: 1px;
+  --rule-strong: 2px;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-round: 999px;
+
+  --control-height: 2.75rem;
+  --z-base: 1;
+  --z-raised: 10;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+
+  /* Backward-compatible aliases for the original one-file design. */
+  --paper: var(--color-paper);
+  --edge: var(--color-edge);
+  --ink: var(--color-ink);
+  --ink-soft: var(--color-neutral);
+  --accent: var(--color-accent);
+  --label: var(--color-label);
+  --shadow: var(--color-shadow);
+}
