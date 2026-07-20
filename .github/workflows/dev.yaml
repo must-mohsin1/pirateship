@@ -1,0 +1,18 @@
+# This workflow will deploy a python cdk project
+name: Develop
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        required: false
+        type: string
+jobs:
+  deploy:
+    name: Develop Stage
+    permissions: write-all
+    uses: 
+      mustcompany/mustcompany-workflows/.github/workflows/must-pirateship-pipeline.yaml@release
+    with:
+      environment: develop
+      version: ${{ inputs.version }}
+    secrets: inherit
