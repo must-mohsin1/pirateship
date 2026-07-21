@@ -87,7 +87,7 @@ Use a dedicated authenticated production RPC rather than depending on the public
 
 Product keys and generation secrets must never be embedded in the public frontend. The repository supports these deployment shapes:
 
-- The integrated Node server serves the page plus `/api/*` from one process. Amoy compatibility mode uses SQLite; mainnet generated mode uses shared Redis and does not open SQLite.
+- The integrated Node server serves the page plus `/api/*` from one process. Amoy compatibility mode uses SQLite; mainnet generated mode uses a standard Redis primary endpoint and does not open SQLite.
 - The root `api/` routes are Vercel Functions. They use Upstash Redis because a Vercel Function has a read-only filesystem apart from temporary scratch space and may scale to multiple instances.
 
 For a local Docker run:
@@ -114,7 +114,7 @@ For the current Vercel deployment:
 4. Use a dedicated authenticated Polygon RPC. Keep `CONTRACT_ADDRESS` and `EXPECTED_CHAIN_ID` identical to `escrow-config.js`, and keep `PUBLIC_ORIGIN` exactly `https://pirateship-must.vercel.app` for this deployment. Health checks fail if the RPC reports a different chain.
 5. Redeploy, then confirm `GET https://pirateship-must.vercel.app/api/health` returns `{ "ok": true }`.
 
-The Redis adapter stores wallet challenges with a TTL, applies a shared per-client rate limit, and encrypts stored assignments with AES-256-GCM. Inventory mode atomically consumes imported keys and quarantines corrupt unassigned ciphertext. Generated mode uses HMAC-SHA-256 with a separate 32-byte generation secret, the chain ID, contract address, and supporter wallet to produce a stable 128-bit license identifier. It records the encrypted assignment atomically, fingerprints both secrets and the deployment context, rejects secret or contract drift, refuses finite inventory in the generated namespace, and disables the inventory-import API. Leave `PRODUCT_KEY_REDIS_PREFIX` blank to use the contract-address default, or use a unique value for every chain and escrow deployment.
+The Redis adapter stores wallet challenges with a TTL, applies a shared per-client rate limit, and encrypts stored assignments with AES-256-GCM. The integrated AWS server accepts a standard `redis://`/`rediss://` connection URL; production requires `rediss://` plus authentication. Vercel continues to use Upstash REST. Configure exactly one transport. Inventory mode atomically consumes imported keys and quarantines corrupt unassigned ciphertext. Generated mode uses HMAC-SHA-256 with a separate 32-byte generation secret, the chain ID, contract address, and supporter wallet to produce a stable 128-bit license identifier. It records the encrypted assignment atomically, fingerprints both secrets and the deployment context, rejects secret or contract drift, refuses finite inventory in the generated namespace, and disables the inventory-import API. Leave `PRODUCT_KEY_REDIS_PREFIX` blank to use the contract-address default, or use a unique value for every chain and escrow deployment.
 
 The integrated long-running server keeps `keyApiBase` empty as well. When it is deployed behind HTTPS, set `TRUST_PROXY=true` and block direct access to the Node port. Its rate limiter uses the last address in `X-Forwarded-For`, which matches an AWS Application Load Balancer directly appending the real client address. A separate API origin requires one exact `CORS_ORIGIN` and the matching HTTPS `keyApiBase`; never allow `*` for wallet-verification endpoints.
 
@@ -126,7 +126,7 @@ The API uses JSON and returns errors as `{ "error": "..." }`:
 - `POST /api/keys/redeem` accepts `{ "challengeId": "...", "address": "0x...", "signature": "0x..." }`. It returns `{ "productKey": "...", "existing": false }` for a new assignment or `existing: true` for the stable key already assigned to that approved wallet.
 - `POST /api/admin/keys` accepts finite inventory only in inventory mode. Generated mainnet mode authenticates the request and returns HTTP `409` because unlimited licenses require no uploads.
 
-Runtime configuration is shared unless noted. Generated mode uses the Upstash, Redis-encryption, generation, Redis-prefix, Redis-timeout, and rate-limit variables in both Vercel and the integrated Node server. `CORS_ORIGIN`, `PORT`, `HOST`, `DATABASE_PATH`, and `TRUST_PROXY` apply to the integrated Node server; `DATABASE_PATH` is ignored in generated mode.
+Runtime configuration is shared unless noted. Generated mode uses one Redis transport plus the encryption, generation, Redis-prefix, Redis-timeout, and rate-limit variables. `REDIS_URL` is for the integrated Node server; the Upstash REST variables are for Vercel. `CORS_ORIGIN`, `PORT`, `HOST`, `DATABASE_PATH`, and `TRUST_PROXY` apply to the integrated Node server; `DATABASE_PATH` is ignored in generated mode.
 
 | Variable | Purpose |
 | --- | --- |
@@ -137,13 +137,15 @@ Runtime configuration is shared unless noted. Generated mode uses the Upstash, R
 | `CORS_ORIGIN` | Optional single allowed browser origin when the API is hosted separately. |
 | `ADMIN_TOKEN` | Private inventory-administration token with at least 32 random characters. |
 | `PRODUCT_KEY_MODE` | `inventory` for the Amoy compatibility flow or `generated` for unlimited mainnet licenses. |
+| `REDIS_URL` | Standard Redis connection URL for the integrated server. Production requires a TLS `rediss://` URL containing authentication; inject the complete value as a secret. |
+| `REDIS_CLUSTER_MODE` | Must be `false`. The atomic Lua operations require a non-cluster primary/write endpoint. |
 | `UPSTASH_REDIS_REST_URL` | Server-only Upstash REST endpoint injected by the Vercel integration. |
 | `UPSTASH_REDIS_REST_TOKEN` | Server-only Upstash standard token; never expose it in browser code. |
 | `PRODUCT_KEY_ENCRYPTION_KEY` | Base64-encoded 32-byte AES key used to encrypt Redis inventory or assignments. |
 | `PRODUCT_KEY_GENERATION_KEY` | Separate base64-encoded 32-byte HMAC key required by generated mode. Losing or changing it invalidates deterministic regeneration, so back it up securely. |
 | `PRODUCT_KEY_LICENSE_PREFIX` | Public display prefix for generated licenses; defaults to `PIRATE-POL`. |
 | `PRODUCT_KEY_REDIS_PREFIX` | Environment/contract-specific Redis namespace. |
-| `REDIS_TIMEOUT_MS` | Maximum duration of each Upstash request; defaults to `5000`. |
+| `REDIS_TIMEOUT_MS` | Upstash request timeout, or standard Redis connection/socket inactivity and graceful-shutdown timeout; defaults to `5000`. |
 | `RPC_TIMEOUT_MS` | Timeout for an upstream Polygon verification request; defaults to `10000`. |
 | `VERIFICATION_MAX_CONCURRENT` | Maximum simultaneous on-chain entitlement checks; defaults to `8`. |
 | `VERIFICATION_MAX_QUEUED` | Maximum checks waiting for capacity; defaults to `32`. |
@@ -183,7 +185,7 @@ Recommended first AWS deployment:
 6. Keep the service at exactly one desired task for this SQLite/process-local implementation. Set the rolling deployment limits to minimum healthy `0%` and maximum `100%` so old and new tasks do not overlap; this trades a brief deployment interruption for single-writer safety. Do not enable horizontal scaling until challenges, rate limits, and key assignment use shared production storage.
 7. Enable EFS backups, CloudWatch logs, and alarms for unhealthy targets and HTTP `5xx` responses before loading real product keys.
 
-The checked-in `.env.aws.example` still targets Polygon Amoy. For mainnet, use `.env.aws-mainnet.example`: generated mode moves assignments, challenges, and rate limits to shared Redis without modifying CDK or opening SQLite. DevOps must inject independent encryption and generation secrets, configure Redis backup/restore, and use the final contract-specific namespace. After the audited contract is deployed, update `escrow-config.js`, `CONTRACT_ADDRESS`, and `EXPECTED_CHAIN_ID=137` together and rebuild the image. Never reuse the rehearsal administrator token, Redis namespace, or secret.
+The checked-in `.env.aws.example` still targets Polygon Amoy. For mainnet, use `.env.aws-mainnet.example`: generated mode moves assignments, challenges, and rate limits to shared Redis without modifying CDK or opening SQLite. DevOps supplies a TLS/authenticated primary write endpoint with cluster mode disabled and backups enabled, and injects `REDIS_URL` plus the other blank runtime values through the deployment environment. Keep credentials and product-key secrets in the deployment secret manager rather than plaintext task environment or a committed environment file. The application team owns the independent administrator, encryption, and generation secrets and the final contract-specific namespace. After the audited contract is deployed, update `escrow-config.js`, `CONTRACT_ADDRESS`, and `EXPECTED_CHAIN_ID=137` together and rebuild the image. Never reuse the rehearsal administrator token, Redis namespace, or secret.
 
 ### 4. Publish the release
 

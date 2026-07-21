@@ -165,6 +165,24 @@ function generatedFixture(overrides = {}) {
   return { redis, store };
 }
 
+test("Redis stores close adapters that own persistent connections", async () => {
+  let closeCalls = 0;
+  const encryptionKey = Buffer.alloc(32, 1).toString("base64");
+  const connectedStore = new RedisKeyStore({
+    redis: {
+      async close() {
+        closeCalls += 1;
+      },
+    },
+    encryptionKey,
+  });
+  const statelessStore = new RedisKeyStore({ redis: {}, encryptionKey });
+
+  await connectedStore.close();
+  await statelessStore.close();
+  assert.equal(closeCalls, 1);
+});
+
 test("Redis inventory is encrypted, deduplicated, and assigned stably", async () => {
   const { redis, store } = fixture();
   assert.equal(await store.addKeys(["PIRATE-ONE", "PIRATE-ONE", "PIRATE-TWO"]), 2);

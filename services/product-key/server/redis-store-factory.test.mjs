@@ -8,6 +8,7 @@ import {
   createRedisProductKeyStore,
   productKeyMode,
 } from "./redis-store-factory.mjs";
+import { StandardRedisClient } from "./standard-redis-client.mjs";
 
 const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000001";
 
@@ -29,6 +30,21 @@ test("the Redis factory keeps finite inventory as its compatibility default", ()
   assert.equal(productKeyMode(environment()), "inventory");
   assert.equal(store instanceof RedisKeyStore, true);
   assert.equal(store instanceof GeneratedRedisKeyStore, false);
+});
+
+test("Polygon mainnet refuses to start outside generated-key mode", () => {
+  assert.throws(
+    () => productKeyMode(environment(), 137),
+    /PRODUCT_KEY_MODE=generated is required on Polygon mainnet/,
+  );
+  assert.throws(
+    () => productKeyMode(environment({ PRODUCT_KEY_MODE: "inventory" }), 137),
+    /PRODUCT_KEY_MODE=generated is required on Polygon mainnet/,
+  );
+  assert.equal(
+    productKeyMode(environment({ PRODUCT_KEY_MODE: "generated" }), 137),
+    "generated",
+  );
 });
 
 test("the Redis factory constructs deployment-bound unlimited licenses", () => {
@@ -58,5 +74,88 @@ test("the Redis factory rejects unknown modes and missing generation secrets", (
       redis: {},
     }),
     /PRODUCT_KEY_GENERATION_KEY is required/,
+  );
+});
+
+test("the Redis factory selects a standard Redis connection URL", () => {
+  const store = createRedisProductKeyStore({
+    environment: environment({
+      NODE_ENV: "production",
+      PRODUCT_KEY_MODE: "generated",
+      REDIS_CLUSTER_MODE: "false",
+      REDIS_URL: "rediss://default:secret@redis.example:6379",
+    }),
+    contractAddress: CONTRACT_ADDRESS,
+    expectedChainId: 137,
+  });
+
+  assert.equal(store.redis instanceof StandardRedisClient, true);
+});
+
+test("the Redis factory rejects ambiguous or clustered connections", () => {
+  assert.throws(
+    () => createRedisProductKeyStore({
+      environment: environment({
+        PRODUCT_KEY_MODE: "generated",
+        REDIS_URL: "redis://127.0.0.1:6379",
+        UPSTASH_REDIS_REST_URL: "https://example.upstash.io",
+      }),
+      contractAddress: CONTRACT_ADDRESS,
+      expectedChainId: 137,
+    }),
+    /either REDIS_URL or the Upstash REST variables/,
+  );
+  assert.throws(
+    () => createRedisProductKeyStore({
+      environment: environment({
+        PRODUCT_KEY_MODE: "generated",
+        REDIS_CLUSTER_MODE: "true",
+        REDIS_URL: "redis://127.0.0.1:6379",
+      }),
+      contractAddress: CONTRACT_ADDRESS,
+      expectedChainId: 137,
+    }),
+    /REDIS_CLUSTER_MODE=false is required/,
+  );
+});
+
+test("the Redis factory requires TLS and authentication in production", () => {
+  assert.throws(
+    () => createRedisProductKeyStore({
+      environment: environment({
+        NODE_ENV: "production",
+        PRODUCT_KEY_MODE: "generated",
+        REDIS_URL: "rediss://default:secret@redis.example:6379",
+      }),
+      contractAddress: CONTRACT_ADDRESS,
+      expectedChainId: 137,
+    }),
+    /REDIS_CLUSTER_MODE=false is required/,
+  );
+  assert.throws(
+    () => createRedisProductKeyStore({
+      environment: environment({
+        NODE_ENV: "production",
+        PRODUCT_KEY_MODE: "generated",
+        REDIS_CLUSTER_MODE: "false",
+        REDIS_URL: "redis://127.0.0.1:6379",
+      }),
+      contractAddress: CONTRACT_ADDRESS,
+      expectedChainId: 137,
+    }),
+    /rediss:\/\/ TLS/,
+  );
+  assert.throws(
+    () => createRedisProductKeyStore({
+      environment: environment({
+        NODE_ENV: "production",
+        PRODUCT_KEY_MODE: "generated",
+        REDIS_CLUSTER_MODE: "false",
+        REDIS_URL: "rediss://redis.example:6379",
+      }),
+      contractAddress: CONTRACT_ADDRESS,
+      expectedChainId: 137,
+    }),
+    /include Redis authentication/,
   );
 });

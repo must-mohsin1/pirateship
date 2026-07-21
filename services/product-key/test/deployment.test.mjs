@@ -99,8 +99,10 @@ test("the AWS mainnet sample selects unlimited Redis without embedding secrets",
   assert.equal(environment.PRODUCT_KEY_MODE, "generated");
   assert.equal(environment.PRODUCT_KEY_LICENSE_PREFIX, "PIRATE-POL");
   assert.equal(environment.PRODUCT_KEY_REDIS_PREFIX, "");
-  assert.equal(environment.UPSTASH_REDIS_REST_URL, "");
-  assert.equal(environment.UPSTASH_REDIS_REST_TOKEN, "");
+  assert.equal(environment.REDIS_URL, "");
+  assert.equal(environment.REDIS_CLUSTER_MODE, "false");
+  assert.equal(environment.UPSTASH_REDIS_REST_URL, undefined);
+  assert.equal(environment.UPSTASH_REDIS_REST_TOKEN, undefined);
   assert.equal(environment.PRODUCT_KEY_ENCRYPTION_KEY, "");
   assert.equal(environment.PRODUCT_KEY_GENERATION_KEY, "");
   assert.equal(environment.DATABASE_PATH, undefined);

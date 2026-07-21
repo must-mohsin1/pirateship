@@ -51,7 +51,7 @@ assertPublicDeploymentMatches(
 );
 
 process.umask(0o077);
-const mode = productKeyMode(process.env);
+const mode = productKeyMode(process.env, expectedChainId);
 let store;
 if (mode === "generated") {
   store = createRedisProductKeyStore({
@@ -181,10 +181,16 @@ server.listen(port, host, () => {
   console.log(`Pirate Network launch server listening at ${publicOrigin}`);
 });
 
+let shuttingDown = false;
 function shutdown() {
-  server.close(() => {
-    if (typeof store.close === "function") store.close();
-    process.exit(0);
+  if (shuttingDown) return;
+  shuttingDown = true;
+  server.close(async () => {
+    try {
+      if (typeof store.close === "function") await store.close();
+    } finally {
+      process.exit(0);
+    }
   });
 }
 
