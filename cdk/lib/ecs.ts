@@ -108,6 +108,10 @@ export function createEcsResources(scope: cdk.Stack): EcsResources {
     });
 
     backendService.attachEfs(fileSystem, accessPoint, '/data');
+    // attachEfs wires the security group but not IAM — the access point uses
+    // IAM authorization, so the task role needs an explicit grant or EFS
+    // rejects the mount ("access denied by server").
+    fileSystem.grantReadWrite(backendService.service.taskDefinition.taskRole);
     backendService.addEnvironment('DATABASE_PATH', '/data/product-keys.db');
 
     const listenerConfig = new ListenerConfig();
