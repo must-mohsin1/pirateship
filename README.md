@@ -63,6 +63,10 @@ npm --prefix services/product-key run preflight:mainnet
 
 This check must report `READY_FOR_MANUAL_DEPLOYMENT_REVIEW`. It cannot deploy the contract. Follow the complete runbook before switching the public configuration away from Amoy.
 
+The preflight prints separate Keccak-256 and SHA-256 values for the bare creation bytecode and for the full deployment initcode. Review the full deployment-initcode fingerprint: unlike the bare bytecode hash, it also commits to the approved beneficiary and immutable `300 POL` minimum pledge.
+
+After every gate is complete, start the localhost-only Trust Wallet handoff with `npm --prefix services/product-key run deploy:mainnet:local`. It recompiles the contract from the exact `SOURCE_COMMIT` Git object, refuses to start unless preflight is ready, and asks only the EIP-6963 provider identified as Trust Wallet to send that reviewed initcode. A cryptographically random `.localhost` origin avoids stale browser-origin state. A separate server-side connection to the dedicated Polygon RPC waits for 20 confirmations, verifies the first recorded transaction hash and exact mined input, and reads back the immutable on-chain terms. A durable one-way local attempt journal prevents an ambiguous retry; even a reported wallet rejection requires manual chain reconciliation. The handoff never accepts a recovery phrase or raw private key.
+
 The minimum cannot be changed after deployment. The page reads the exact value from the contract instead of trusting a frontend-only setting. Polygon USDC support is intentionally deferred; this version accepts native POL only.
 
 ### 2. Configure the landing page

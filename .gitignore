@@ -10,6 +10,8 @@ node_modules/
 !.env.mainnet-preflight.example
 !.env.vercel.example
 data/
+.mainnet-deployment-attempt.json
+.mainnet-deployment-attempt.json.*.tmp
 *.db
 *.db-shm
 *.db-wal

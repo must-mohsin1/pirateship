@@ -1,8 +1,10 @@
 import { execFile as execFileCallback } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import {
+  ContractFactory,
   JsonRpcProvider,
   ZeroAddress,
   formatEther,
@@ -13,12 +15,21 @@ import {
 import solc from "solc";
 
 export const POLYGON_MAINNET_CHAIN_ID = 137n;
+export const APPROVED_MAINNET_DEPLOYER = "0xcF9178cA7360066B25de9c142A4c155abf151D6f";
+export const APPROVED_MAINNET_BENEFICIARY = APPROVED_MAINNET_DEPLOYER;
+export const APPROVED_MAINNET_MINIMUM_PLEDGE_WEI = 300_000_000_000_000_000_000n;
+export const APPROVED_MAINNET_INITCODE_KECCAK256 =
+  "0x8bc7eee692572585c17f69febde2b84ef02ca80ea562bc15d22de860bd561f94";
 export const SUPPORTED_CUSTODY_MODES = new Set([
   "hardware-wallet",
   "multisig-direct-deployer",
   "trust-wallet-eoa",
 ]);
 const execFile = promisify(execFileCallback);
+
+function sha256Hex(hexData) {
+  return `0x${createHash("sha256").update(Buffer.from(hexData.slice(2), "hex")).digest("hex")}`;
+}
 
 function required(environment, name) {
   const value = environment[name]?.trim();
@@ -57,7 +68,7 @@ export function parseMainnetPreflightEnvironment(environment) {
   }
 
   return {
-    rpcUrl: required(environment, "RPC_URL"),
+    rpcUrl: httpsUrl(environment, "RPC_URL"),
     deployerAddress: address(environment, "DEPLOYER_ADDRESS"),
     beneficiaryAddress: address(environment, "BENEFICIARY_ADDRESS"),
     minimumPledgeText,
@@ -75,14 +86,18 @@ export function parseMainnetPreflightEnvironment(environment) {
   };
 }
 
-export async function compileEscrowFingerprint() {
-  const contractUrl = new URL("../../../contracts/RefundableProductEscrow.sol", import.meta.url);
-  const source = await readFile(contractUrl, "utf8");
+export async function prepareEscrowDeployment({ beneficiaryAddress, minimumPledgeWei, source }) {
+  const contractSource =
+    source ??
+    (await readFile(
+      new URL("../../../contracts/RefundableProductEscrow.sol", import.meta.url),
+      "utf8",
+    ));
   const compiled = JSON.parse(
     solc.compile(
       JSON.stringify({
         language: "Solidity",
-        sources: { "RefundableProductEscrow.sol": { content: source } },
+        sources: { "RefundableProductEscrow.sol": { content: contractSource } },
         settings: {
           optimizer: { enabled: true, runs: 200 },
           evmVersion: "paris",
@@ -95,18 +110,35 @@ export async function compileEscrowFingerprint() {
   if (errors.length) {
     throw new Error(errors.map(({ formattedMessage }) => formattedMessage).join("\n"));
   }
-  const bytecode =
-    compiled.contracts["RefundableProductEscrow.sol"].RefundableProductEscrow.evm.bytecode.object;
+  const artifact = compiled.contracts["RefundableProductEscrow.sol"].RefundableProductEscrow;
+  const creationBytecode = `0x${artifact.evm.bytecode.object}`;
+  const factory = new ContractFactory(artifact.abi, creationBytecode);
+  const deployment = await factory.getDeployTransaction(beneficiaryAddress, minimumPledgeWei);
+  const deploymentInitcode = deployment.data;
+  if (typeof deploymentInitcode !== "string") {
+    throw new Error("Could not construct the escrow deployment initcode.");
+  }
   const compiler = solc.version();
   if (!compiler.startsWith("0.8.30+")) {
     throw new Error(`Expected pinned Solidity 0.8.30, but loaded ${compiler}.`);
   }
-  return {
+  const fingerprint = {
     compiler,
     optimizerRuns: 200,
     evmVersion: "paris",
-    creationBytecodeHash: keccak256(`0x${bytecode}`),
+    creationBytecodeBytes: (creationBytecode.length - 2) / 2,
+    creationBytecodeKeccak256: keccak256(creationBytecode),
+    creationBytecodeSha256: sha256Hex(creationBytecode),
+    constructorArguments: `0x${deploymentInitcode.slice(creationBytecode.length)}`,
+    deploymentInitcodeBytes: (deploymentInitcode.length - 2) / 2,
+    deploymentInitcodeKeccak256: keccak256(deploymentInitcode),
+    deploymentInitcodeSha256: sha256Hex(deploymentInitcode),
   };
+  return { deploymentInitcode, fingerprint };
+}
+
+export async function compileEscrowFingerprint(deploymentInputs) {
+  return (await prepareEscrowDeployment(deploymentInputs)).fingerprint;
 }
 
 export async function readGitState() {
@@ -118,10 +150,21 @@ export async function readGitState() {
   return { head: head.trim().toLowerCase(), clean: status.trim() === "" };
 }
 
+export async function readContractSourceAtCommit(sourceCommit) {
+  const repositoryRoot = new URL("../../../", import.meta.url);
+  const { stdout } = await execFile(
+    "git",
+    ["show", `${sourceCommit}:contracts/RefundableProductEscrow.sol`],
+    { cwd: repositoryRoot },
+  );
+  return stdout;
+}
+
 export async function runMainnetPreflight({
   environment = process.env,
   providerFactory = (rpcUrl) => new JsonRpcProvider(rpcUrl),
   gitStateReader = readGitState,
+  contractSourceReader = readContractSourceAtCommit,
 } = {}) {
   const config = parseMainnetPreflightEnvironment(environment);
   const provider = providerFactory(config.rpcUrl);
@@ -138,11 +181,29 @@ export async function runMainnetPreflight({
       provider.getBalance(config.deployerAddress),
       provider.getCode(config.deployerAddress),
       provider.getCode(config.beneficiaryAddress),
-      compileEscrowFingerprint(),
+      contractSourceReader(config.sourceCommit).then((source) =>
+        compileEscrowFingerprint({
+          beneficiaryAddress: config.beneficiaryAddress,
+          minimumPledgeWei: config.minimumPledgeWei,
+          source,
+        }),
+      ),
       gitStateReader(),
     ]);
 
   const blockers = [];
+  if (config.deployerAddress !== APPROVED_MAINNET_DEPLOYER) {
+    blockers.push("DEPLOYER_ADDRESS does not match the approved mainnet deployer.");
+  }
+  if (config.beneficiaryAddress !== APPROVED_MAINNET_BENEFICIARY) {
+    blockers.push("BENEFICIARY_ADDRESS does not match the approved mainnet beneficiary.");
+  }
+  if (config.minimumPledgeWei !== APPROVED_MAINNET_MINIMUM_PLEDGE_WEI) {
+    blockers.push("MINIMUM_PLEDGE_POL does not equal the approved 300 POL value.");
+  }
+  if (contractBuild.deploymentInitcodeKeccak256 !== APPROVED_MAINNET_INITCODE_KECCAK256) {
+    blockers.push("The deployment initcode does not match the approved mainnet fingerprint.");
+  }
   if (!config.securityAuditComplete) blockers.push("SECURITY_AUDIT_COMPLETE is not yes.");
   if (!config.priceReviewComplete) blockers.push("PRICE_REVIEW_COMPLETE is not yes.");
   if (gitState.head !== config.sourceCommit) {
@@ -203,8 +264,8 @@ if (invokedDirectly) {
     const result = await runMainnetPreflight();
     console.log(JSON.stringify(result, null, 2));
     if (result.blockers.length) process.exitCode = 1;
-  } catch (error) {
-    console.error(`Mainnet preflight failed: ${error.message}`);
+  } catch {
+    console.error("Mainnet preflight failed. Check the local configuration, Git state, and dedicated RPC without sharing its URL.");
     process.exitCode = 1;
   }
 }

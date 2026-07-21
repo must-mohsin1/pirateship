@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PirateShip reviewed mainnet deployment</title>
+    <style>
+      :root { color-scheme: dark; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      body { margin: 0; background: #07110f; color: #e9fff7; }
+      main { width: min(880px, calc(100% - 32px)); margin: 48px auto; }
+      h1 { font: 700 clamp(28px, 5vw, 52px)/1.05 system-ui, sans-serif; }
+      .warning { border-left: 4px solid #ffcf5c; padding: 12px 16px; background: #2a2109; }
+      dl { display: grid; grid-template-columns: minmax(160px, 220px) 1fr; gap: 12px; }
+      dt { color: #8fbcae; } dd { margin: 0; overflow-wrap: anywhere; }
+      label { display: block; margin: 20px 0; }
+      input[type="text"] { width: min(100%, 480px); padding: 12px; font: inherit; }
+      button { padding: 12px 18px; margin-right: 10px; font: 700 16px system-ui, sans-serif; }
+      button:disabled { opacity: .45; }
+      #status { min-height: 24px; color: #ffcf5c; }
+      pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #020706; padding: 16px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p>LOCAL REVIEW TOOL · POLYGON MAINNET</p>
+      <h1>Sign only the deployment you reviewed.</h1>
+      <p class="warning">This page is served only from your computer. It refuses to start until the mainnet preflight, including the independent-audit gate, is complete. It never requests a recovery phrase or private key.</p>
+      <dl>
+        <dt>Owner / deployer</dt><dd id="deployer">Loading…</dd>
+        <dt>Beneficiary</dt><dd id="beneficiary">Loading…</dd>
+        <dt>Minimum pledge</dt><dd id="minimum">Loading…</dd>
+        <dt>Source commit</dt><dd id="commit">Loading…</dd>
+        <dt>Initcode Keccak-256</dt><dd id="fingerprint">Loading…</dd>
+        <dt>Deployment payload</dt><dd id="payload-size">Loading…</dd>
+      </dl>
+      <p id="status">Review the values, then connect the dedicated Trust Wallet account.</p>
+      <button id="connect-wallet" type="button">Connect Trust Wallet</button>
+      <label><input id="acknowledge" type="checkbox"> <span id="acknowledgement-text">Two reviewers compared every reviewed deployment field.</span></label>
+      <label>Type <strong id="confirmation-phrase">the exact confirmation phrase shown after load</strong><br><input id="confirmation" type="text" autocomplete="off"></label>
+      <button id="deploy-contract" type="button" disabled>Deploy reviewed contract</button>
+      <p>The wallet transaction sends no pledge value. It spends mainnet POL only for gas and starts the immutable 30-day campaign clock.</p>
+      <pre id="result">No deployment submitted.</pre>
+    </main>
+    <script type="module" src="/mainnet-deploy.js"></script>
+  </body>
+</html>

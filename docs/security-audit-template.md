@@ -28,13 +28,21 @@ public HTTPS URL, then use that URL as `AUDIT_REPORT_URL`.
 | Solidity compiler | `0.8.30` |
 | Optimizer | enabled, `200` runs |
 | EVM target | `paris` |
-| Creation-bytecode SHA-256 | Pending final preflight |
+| Creation bytecode bytes | `4992` |
+| Creation bytecode Keccak-256 | `0x36e443390e90ae7c9162961873b9fea1c655926767021360d267da0ecaf74bd6` |
+| Creation bytecode SHA-256 | `0xdbba12df303fc3a04c83fd8c64c25be01283de079c89a0d8051a64e8f576d0a6` |
 | Constructor beneficiary | `0xcF9178cA7360066B25de9c142A4c155abf151D6f` |
 | Constructor minimum pledge | `300000000000000000000` wei (`300 POL`) |
+| Full deployment initcode bytes | `5056` |
+| Full deployment initcode Keccak-256 | `0x8bc7eee692572585c17f69febde2b84ef02ca80ea562bc15d22de860bd561f94` |
+| Full deployment initcode SHA-256 | `0x3467325d97e41fd34ff2737ec51111716482d0a0621b8c507e3bab81b9b4ade5` |
 | Intended chain | Polygon PoS mainnet, chain ID `137` |
 
-The reviewer should reproduce the creation bytecode with the checked-in pinned
-compiler and compare its SHA-256 value with the deployment preflight output.
+The reviewer should reproduce both fingerprints with the checked-in pinned
+compiler. The full deployment initcode is the deployment-control value because
+it binds the bytecode to the reviewed beneficiary and minimum pledge. The bare
+creation-bytecode values identify the compiled contract but do not bind those
+constructor arguments.
 
 ## Required threat model
 

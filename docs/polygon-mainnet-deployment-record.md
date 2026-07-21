@@ -16,7 +16,7 @@ secret, seed phrase, private key, RPC credential, or administrator token.
 | Custody mode | Dedicated Trust Wallet EOA; permanent single-owner exception |
 | Minimum pledge | `300 POL` |
 | Minimum pledge in wei | `300000000000000000000` |
-| Product-key model | Unlimited deterministic license per approved wallet |
+| Product-key model | Unlimited stable generated license per approved wallet |
 | Product-key datastore | Shared Redis; SQLite/EFS prohibited for mainnet |
 
 ## Recorded approvals and attestations
@@ -49,7 +49,7 @@ a multisig or hardware wallet.
 - [ ] A dedicated authenticated mainnet RPC is configured.
 - [ ] Redis backup, restore, monitoring, and secret recovery have been tested.
 - [ ] The usable product validates the generated `PIRATE-POL-*` licenses.
-- [ ] The final clean source commit and creation-bytecode hash are recorded below.
+- [ ] The final clean source commit and constructor-bound deployment-initcode fingerprint are recorded below.
 
 ## Final deployment output
 
@@ -61,7 +61,13 @@ Fill this section only after every evidence item above is complete.
 | Solidity compiler | `0.8.30` |
 | Optimizer | enabled, `200` runs |
 | EVM target | `paris` |
-| Creation bytecode hash | Pending final clean commit |
+| Creation bytecode Keccak-256 | `0x36e443390e90ae7c9162961873b9fea1c655926767021360d267da0ecaf74bd6` |
+| Creation bytecode SHA-256 | `0xdbba12df303fc3a04c83fd8c64c25be01283de079c89a0d8051a64e8f576d0a6` |
+| Constructor arguments | beneficiary `0xcF9178cA7360066B25de9c142A4c155abf151D6f`; minimum `300000000000000000000` wei |
+| Deployment initcode Keccak-256 | `0x8bc7eee692572585c17f69febde2b84ef02ca80ea562bc15d22de860bd561f94` |
+| Deployment initcode SHA-256 | `0x3467325d97e41fd34ff2737ec51111716482d0a0621b8c507e3bab81b9b4ade5` |
+| Mined transaction input Keccak-256 | Pending local-handoff and PolygonScan verification; must equal deployment initcode Keccak-256 |
+| Local handoff verification | Pending 20-confirmation independent-RPC check of transaction input, owner, beneficiary, minimum, deadline, phase, and release readback |
 | Audit report URL | Pending |
 | Release criteria URL | `https://pirateship.must.company/mainnet-release-criteria.html` (publication pending) |
 | Deployment transaction | Pending |

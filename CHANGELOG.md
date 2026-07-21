@@ -2,6 +2,25 @@
 
 All notable changes to Pirate Network are documented in this file.
 
+## [0.3.0.3] - 2026-07-21
+
+### Added
+
+- Operators can now deploy the reviewed Polygon mainnet escrow through a localhost-only Trust Wallet handoff without exposing a recovery phrase, private key, or authenticated RPC URL to the browser.
+- The deployment record now includes reproducible creation-bytecode and constructor-bound initcode fingerprints for the approved beneficiary and immutable `300 POL` minimum.
+
+### Changed
+
+- Mainnet preflight compiles the contract from the exact reviewed Git commit, pins the approved owner, beneficiary, price, and full initcode, and refuses non-HTTPS RPC endpoints.
+- Deployment success now requires 20 confirmations from the separate dedicated RPC plus exact transaction, deployment-block, owner, beneficiary, minimum, deadline, phase, and release-state verification.
+
+### Security
+
+- A controller-bound durable journal permanently locks ambiguous attempts, accepts only the first returned transaction hash, and permits verification only for that same hash; even a reported wallet rejection requires manual chain reconciliation.
+- Expanded contract and handoff tests cover exact deadline behavior, reentrancy, reverting refund receivers, forced POL, wallet/account/network drift, localhost attacks, concurrent controllers, and immutable-state mismatches. Independent external audit remains a mandatory launch gate.
+- Trust Wallet reconnection now replaces stale provider listeners, while localhost Host validation safely accepts case-insensitive DNS names without weakening the exact-origin check.
+- Standalone and workspace installs pin Ganache's Lodash dependency to the fixed `4.18.1` test-only release.
+
 ## [0.3.0.2] - 2026-07-21
 
 ### Added

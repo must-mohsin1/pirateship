@@ -48,7 +48,8 @@ The preflight:
 - checks whether the selected custody mode matches an EOA or contract address;
 - blocks Trust Wallet custody unless permanent hot-wallet risk and offline recovery backup are explicitly attested;
 - converts the proposed pledge to its exact immutable wei value;
-- compiles the checked-in source with the pinned compiler settings and prints a creation-bytecode hash;
+- reads the contract source from the exact `SOURCE_COMMIT` Git object, then compiles it with the pinned settings and prints explicitly named Keccak-256 and SHA-256 fingerprints for both the bare creation bytecode and the full deployment initcode;
+- constructs the full deployment initcode from the reviewed beneficiary and minimum pledge so either constructor input changes the deployment-control fingerprint;
 - verifies that `SOURCE_COMMIT` matches the checked-out commit and that the deployment worktree has no local changes;
 - refuses to report ready when audit or price approval is incomplete.
 
@@ -58,7 +59,7 @@ It is read-only. It never asks for a private key, never opens the wallet, and ca
 
 Two people should independently compare the preflight output against the approved deployment record:
 
-1. Git commit and creation-bytecode hash.
+1. Git commit, compiler settings, and full deployment-initcode Keccak-256 fingerprint. The bare creation-bytecode hash alone is insufficient because it does not include constructor arguments.
 2. Owner/deployer address.
 3. Beneficiary address.
 4. Minimum pledge in POL and wei.
@@ -66,13 +67,23 @@ Two people should independently compare the preflight output against the approve
 6. Dedicated RPC network.
 7. Audit report and release-criteria URLs.
 
-Only then prepare the wallet transaction. Confirm the wallet itself displays Polygon mainnet, the expected deploying account, and a nonzero real-POL gas fee. Do not deploy from this repository through a raw private key.
+Only then start the localhost-only deployment handoff:
+
+```sh
+npm --prefix services/product-key run deploy:mainnet:local
+```
+
+Open the freshly printed `http://<random>.localhost:<port>/` URL in the browser that has the Trust Wallet extension. The cryptographically random hostname creates a fresh browser origin, and the controller rejects every other `Host` value. The page also refuses to operate if a service worker controls that origin. The tool reruns the complete preflight, refuses to start while any gate is blocked, serves no RPC credentials, and accepts only the EIP-6963 provider identified as Trust Wallet. It asks that wallet to send the exact reviewed deployment initcode. Confirm the wallet displays Polygon mainnet, the expected deploying account, zero transfer value, and a nonzero real-POL gas fee. The `300 POL` value is the immutable minimum pledge encoded in the contract, not POL sent by the deployment transaction. Never paste a recovery phrase or private key into the page, project, console, or terminal.
+
+The local page requires the review acknowledgement and exact displayed confirmation phrase before it can call `eth_sendTransaction`. The wallet cannot self-verify success: the localhost controller separately uses the dedicated Polygon RPC, waits for 20 confirmations, compares the actual transaction input with the reviewed initcode, and reads back the owner, beneficiary, minimum pledge, exact deadline, phase, and release flag. A timeout or mismatch fails closed. Keep the independent PolygonScan checks below as a second verification channel.
+
+Immediately before asking Trust Wallet to submit, the controller atomically creates the ignored repository-root file `.mainnet-deployment-attempt.json`; the page also records a secondary browser lock. The first transaction hash is persisted as soon as Trust Wallet returns it and can never be replaced by a later hash. Verification is permitted only for that exact hash. Any wallet/provider/RPC result—including a reported wallet rejection—keeps the durable lock and disables another controller attempt. Reconcile the saved journal, the deployer account nonce, Trust Wallet activity, and PolygonScan first. Remove the journal and browser lock only after two people record that no deployment transaction exists; never bypass either lock by changing the browser profile or moving the repository.
 
 Deployment starts the immutable 30-day clock immediately. Schedule it only when the team, release page, monitoring, unlimited-license service, released product validation, and support coverage are ready.
 
 ## Gate 5: verify before publishing
 
-After deployment, do not accept pledges yet. Record the transaction hash and deployment block, then verify the exact source and constructor arguments on PolygonScan. Read these values back from both the dedicated RPC and PolygonScan:
+After deployment, do not accept pledges yet. Copy the transaction hash, contract address, deployment block, and deadline printed by the local handoff into the deployment record. Then verify the exact source, transaction input, and constructor arguments independently on PolygonScan. Read these values back from both the dedicated RPC and PolygonScan:
 
 - `owner` equals the reviewed owner/deployer;
 - `beneficiary` equals the reviewed treasury;
