@@ -796,11 +796,11 @@
 
   <section class="preorder" id="preorder" aria-labelledby="s-preorder">
     <header class="preorder-header">
-      <p class="preorder-kicker" data-ko="창립 리허설 · 폴리곤 Amoy 테스트넷">Founding rehearsal · Polygon Amoy testnet</p>
+      <p class="preorder-kicker" data-ko="창립 캠페인 · 폴리곤 메인넷">Founding campaign · Polygon mainnet</p>
       <h2 id="s-preorder" data-ko="출시를 후원하세요. 환불 권리는 지키세요.">Back the launch. Keep the refund.</h2>
       <p class="preorder-message" data-ko="Pirate Network는 에이전트 시대에 맞게 채용을 다시 만들려는 시도입니다. 이 도전을 돕고 싶다면 아래 스마트 계약을 통해 사전 주문해 주세요. 저희는 30일 안에 제품과 Product Hunt 출시 증거를 공개합니다. 출시 후 제품을 받아들일 때만 승인하세요. 승인하면 사용 가능한 제품 키를 받을 자격이 생기고 오직 본인의 예치금만 팀에 전달됩니다. 기한까지 승인하지 않으면 전액은 같은 지갑으로 환불 가능한 상태로 남습니다.">
         Pirate Network is an attempt to rebuild hiring for the agent era. If you want to help us
-        test it, place a pre-order through the smart contract below. We have 30 days to publish the
+        build it, place a real-value pre-order through the smart contract below. We have 30 days to publish the
         product and its Product Hunt release evidence. After release, <strong>approve only if you
         accept the product</strong>. Approval makes your wallet eligible to retrieve an available product key and releases only your pledge.
         If you do not approve by the deadline, your full pledge remains refundable to the same wallet.
@@ -823,7 +823,7 @@
       </div>
       <div>
         <dt data-ko="계약 상태">Contract state</dt>
-        <dd class="escrow-phase" id="escrow-phase" data-phase="pending" lang="en">Checking Amoy</dd>
+        <dd class="escrow-phase" id="escrow-phase" data-phase="pending" lang="en">Checking Polygon</dd>
       </div>
       <div>
         <dt data-ko="30일 마감일">30-day deadline</dt>
@@ -835,7 +835,7 @@
       </div>
       <div>
         <dt data-ko="최소 첫 사전 주문">Minimum first pre-order</dt>
-        <dd id="escrow-minimum">0.01 test POL</dd>
+        <dd id="escrow-minimum">300 POL</dd>
       </div>
       <div>
         <dt data-ko="총 사전 주문">Total pre-ordered</dt>
@@ -857,7 +857,7 @@
         <span class="escrow-step-number">1.0</span>
         <div>
           <h3 data-ko="POL 예치">Pre-order in POL</h3>
-          <p data-ko="폴리곤 Amoy 테스트넷에서 지갑을 연결하고 계약에 표시된 최소 테스트 POL 이상을 예치합니다. 팀은 이 단계에서 승인되지 않은 자금을 인출할 수 없습니다.">Connect a wallet on Polygon Amoy and escrow at least the minimum test POL shown by the contract. The team cannot withdraw unapproved funds.</p>
+          <p data-ko="폴리곤 메인넷에서 지갑을 연결하고 계약에 표시된 최소 실제 POL 이상을 예치합니다. 팀은 이 단계에서 승인되지 않은 자금을 인출할 수 없습니다.">Connect a wallet on Polygon mainnet and escrow at least the minimum real POL shown by the contract. The team cannot withdraw unapproved funds.</p>
         </div>
         <span class="escrow-step-state" lang="en">Waiting</span>
       </li>
@@ -915,10 +915,10 @@
         <form class="escrow-form" id="escrow-pledge-form" novalidate>
           <label for="escrow-amount" data-ko="사전 주문 금액 (POL)">Pre-order amount (POL)</label>
           <div class="escrow-input-row" id="escrow-amount-field">
-            <input id="escrow-amount" name="amount" type="text" inputmode="decimal" placeholder="0.01" aria-describedby="escrow-amount-helper" aria-errormessage="escrow-amount-helper" aria-required="true" disabled>
+            <input id="escrow-amount" name="amount" type="text" inputmode="decimal" placeholder="300" aria-describedby="escrow-amount-helper" aria-errormessage="escrow-amount-helper" aria-required="true" disabled>
             <button class="escrow-button primary" id="escrow-pledge" type="submit" disabled data-ko="사전 주문" data-live lang="en">Pre-order</button>
           </div>
-          <p class="escrow-helper" id="escrow-amount-helper" data-ko="첫 테스트 사전 주문은 최소 0.01 테스트 POL입니다. 출시에 대한 기록이 남거나 30일 기한이 지나면 신규 예치가 마감됩니다." data-live aria-live="polite" aria-atomic="true" lang="en">The first test pre-order requires at least 0.01 test POL. New pledges close when release is recorded or the 30-day deadline passes.</p>
+          <p class="escrow-helper" id="escrow-amount-helper" data-ko="첫 사전 주문은 최소 300 POL입니다. 출시에 대한 기록이 남거나 30일 기한이 지나면 신규 예치가 마감됩니다." data-live aria-live="polite" aria-atomic="true" lang="en">The first pre-order requires at least 300 POL. New pledges close when release is recorded or the 30-day deadline passes.</p>
         </form>
 
         <div class="escrow-actions">
@@ -927,7 +927,7 @@
         </div>
 
         <section class="escrow-owner-panel" id="escrow-owner-panel" aria-labelledby="escrow-owner-title" hidden>
-          <h3 id="escrow-owner-title">Owner release rehearsal</h3>
+          <h3 id="escrow-owner-title">Owner release control</h3>
           <p class="escrow-key-note">
             This control appears only for the contract owner. Recording release evidence is permanent,
             immediately closes new pre-orders, and lets funded supporters approve the product.
@@ -935,10 +935,10 @@
           <div class="escrow-form">
             <label for="escrow-release-proof">Public release evidence URL</label>
             <div class="escrow-input-row" id="escrow-release-field">
-              <input id="escrow-release-proof" name="releaseProof" type="url" value="https://github.com/must-aero/pirateship" aria-describedby="escrow-release-helper" aria-errormessage="escrow-release-helper" disabled>
-              <button class="escrow-button primary" id="escrow-release" type="button" disabled lang="en">Record test release</button>
+              <input id="escrow-release-proof" name="releaseProof" type="url" placeholder="https://product.example/release" aria-describedby="escrow-release-helper" aria-errormessage="escrow-release-helper" disabled>
+              <button class="escrow-button primary" id="escrow-release" type="button" disabled lang="en">Record product release</button>
             </div>
-            <p class="escrow-helper" id="escrow-release-helper" aria-live="polite" aria-atomic="true" lang="en">For this Amoy rehearsal, the public project repository is used as test evidence. Use the real Product Hunt or product release URL on mainnet.</p>
+            <p class="escrow-helper" id="escrow-release-helper" aria-live="polite" aria-atomic="true" lang="en">Enter the durable HTTPS URL for the usable product and Product Hunt release only after every published release criterion is satisfied.</p>
           </div>
         </section>
 
@@ -957,14 +957,15 @@
       </div>
     </section>
 
-    <p class="preorder-legal" data-ko="현재 화면은 가치가 없는 테스트 POL을 사용하는 폴리곤 Amoy 테스트넷 리허설입니다. 메인넷 자금을 보내지 마세요.">
-      This is a Polygon Amoy testnet rehearsal using test POL with no real monetary value. Do not send
-      mainnet funds to this contract.
+    <p class="preorder-legal" data-ko="이 캠페인은 실제 가치가 있는 POL을 사용하는 폴리곤 메인넷에서 운영됩니다. 승인하기 전에는 예치금이 팀에 전달되지 않으며, 승인하지 않은 예치금은 마감 후 온체인 환불 거래를 통해 돌려받을 수 있습니다.">
+      This campaign runs on Polygon mainnet using POL with real monetary value. Your pledge is not
+      released to the team unless you approve; an unapproved pledge becomes refundable through an
+      on-chain transaction after the deadline.
     </p>
     <p class="preorder-legal">
-      Planning to support the later mainnet campaign? Read the
+      Before pledging or approving, read the
       <a href="/mainnet-release-criteria.html">published release criteria and supporter terms</a>
-      before deciding whether to pledge or approve. The mainnet campaign is not open yet.
+      and independently verify the contract address and deadline shown above.
     </p>
   </section>
 

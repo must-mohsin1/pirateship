@@ -188,11 +188,10 @@ test("builds a pinned Trust Wallet handoff only from a ready matching preflight"
 });
 
 test("the localhost server rejects DNS-rebinding Host headers", () => {
-  const hostname = "0123456789abcdef.localhost";
+  const hostname = "localhost";
   assert.equal(isAllowedLocalHost(`${hostname}:4174`, 4174, hostname), true);
   assert.equal(isAllowedLocalHost(`${hostname.toUpperCase()}:4174`, 4174, hostname), true);
   assert.equal(isAllowedLocalHost("127.0.0.1:4174", 4174, hostname), false);
-  assert.equal(isAllowedLocalHost("localhost:4174", 4174, hostname), false);
   assert.equal(isAllowedLocalHost("attacker.example:4174", 4174, hostname), false);
   assert.equal(isAllowedLocalHost(undefined, 4174, hostname), false);
 });
@@ -342,6 +341,27 @@ test("discovers only the Trust Wallet EIP-6963 provider", async () => {
   assert.equal(requested, 1);
 
   await assert.rejects(discoverTrustWallet(windowObject, 1), /not detected/);
+});
+
+test("falls back to Trust Wallet's explicit legacy provider without accepting a generic wallet", async () => {
+  const namespacedProvider = { name: "trust-namespaced", request() {} };
+  const namespacedWindow = new EventTarget();
+  namespacedWindow.Event = Event;
+  namespacedWindow.trustwallet = { ethereum: namespacedProvider };
+  assert.equal(await discoverTrustWallet(namespacedWindow, 1), namespacedProvider);
+
+  const markedProvider = { name: "trust-marked", isTrust: true, request() {} };
+  const markedWindow = new EventTarget();
+  markedWindow.Event = Event;
+  markedWindow.ethereum = {
+    providers: [{ name: "other", request() {} }, markedProvider],
+  };
+  assert.equal(await discoverTrustWallet(markedWindow, 1), markedProvider);
+
+  const genericWindow = new EventTarget();
+  genericWindow.Event = Event;
+  genericWindow.ethereum = { request() {} };
+  await assert.rejects(discoverTrustWallet(genericWindow, 1), /not detected/);
 });
 
 test("local page refuses a service-worker-controlled deployment origin", async () => {
@@ -686,7 +706,7 @@ test("localhost controller serves hardened assets and journals verification", as
   const host = new URL(server.deploymentUrl).host;
   const local = (path, options = {}) => requestLocal({ port, host, path, ...options });
   try {
-    assert.match(server.deploymentUrl, /^http:\/\/[0-9a-f]{32}\.localhost:\d+\/$/);
+    assert.match(server.deploymentUrl, /^http:\/\/localhost:\d+\/$/);
     const page = await local("/");
     assert.equal(page.status, 200);
     assert.match(page.headers.get("content-security-policy"), /frame-ancestors 'none'/);

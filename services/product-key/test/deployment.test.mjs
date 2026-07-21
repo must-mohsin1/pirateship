@@ -56,29 +56,25 @@ test("the production image installs only runtime dependencies and runs unprivile
     /@media \(max-width:560px\)\{[\s\S]*?\.punch::before \{ inset-inline:-22px; \}/,
   );
   assert.match(landingPage, /href="\/mainnet-release-criteria\.html"/);
+  assert.match(landingPage, /Founding campaign · Polygon mainnet/);
+  assert.match(landingPage, /The first pre-order requires at least 300 POL/);
+  assert.doesNotMatch(landingPage, /This is a Polygon Amoy testnet rehearsal/);
+  assert.doesNotMatch(landingPage, /The mainnet campaign is not open yet/);
   assert.match(releaseCriteria, /300 POL/);
   assert.match(releaseCriteria, /Approval is optional and permanent/);
   assert.match(releaseCriteria, /A refund still requires an on-chain transaction/);
+  assert.match(releaseCriteria, /0xd92848868a70CCA3706EFa6bA3D2B68F18F211Ff/);
+  assert.match(releaseCriteria, /20 August 2026 at 20:15:52 UTC/);
+  assert.match(releaseCriteria, /exact Sourcify creation and runtime match/);
 });
 
-test("the AWS sample is safe and matches the checked-in Amoy browser contract", async () => {
+test("the historical AWS Amoy sample remains secret-free", async () => {
   const [environmentSource, dockerignore] = await Promise.all([
     readRootFile(".env.aws.example"),
     readRootFile(".dockerignore"),
   ]);
   const environment = parseEnvironment(environmentSource);
 
-  assert.deepEqual(
-    assertPublicDeploymentMatches(
-      globalThis.PIRATE_ESCROW_CONFIG,
-      environment.CONTRACT_ADDRESS,
-      Number(environment.EXPECTED_CHAIN_ID),
-    ),
-    {
-      contractAddress: environment.CONTRACT_ADDRESS,
-      chainId: 80_002,
-    },
-  );
   assert.equal(environment.HOST, "0.0.0.0");
   assert.equal(environment.PORT, "4173");
   assert.equal(environment.DATABASE_PATH, "/data/product-keys.db");
@@ -93,7 +89,18 @@ test("the AWS sample is safe and matches the checked-in Amoy browser contract", 
 test("the AWS mainnet sample selects unlimited Redis without embedding secrets", async () => {
   const environment = parseEnvironment(await readRootFile(".env.aws-mainnet.example"));
 
-  assert.equal(environment.CONTRACT_ADDRESS, "");
+  assert.deepEqual(
+    assertPublicDeploymentMatches(
+      globalThis.PIRATE_ESCROW_CONFIG,
+      environment.CONTRACT_ADDRESS,
+      Number(environment.EXPECTED_CHAIN_ID),
+    ),
+    {
+      contractAddress: environment.CONTRACT_ADDRESS,
+      chainId: 137,
+    },
+  );
+  assert.equal(environment.CONTRACT_ADDRESS, "0xd92848868a70CCA3706EFa6bA3D2B68F18F211Ff");
   assert.equal(environment.EXPECTED_CHAIN_ID, "137");
   assert.equal(environment.PUBLIC_ORIGIN, "https://pirateship.must.company");
   assert.equal(environment.PRODUCT_KEY_MODE, "generated");
@@ -109,7 +116,7 @@ test("the AWS mainnet sample selects unlimited Redis without embedding secrets",
   assert.equal(environment.TRUST_PROXY, "true");
 });
 
-test("the Vercel sample pins the public Amoy deployment and request timeouts", async () => {
+test("the Vercel fallback pins the public mainnet deployment and generated licenses", async () => {
   const environment = parseEnvironment(await readRootFile(".env.vercel.example"));
   assert.deepEqual(
     assertPublicDeploymentMatches(
@@ -119,9 +126,12 @@ test("the Vercel sample pins the public Amoy deployment and request timeouts", a
     ),
     {
       contractAddress: environment.CONTRACT_ADDRESS,
-      chainId: 80_002,
+      chainId: 137,
     },
   );
+  assert.equal(environment.PRODUCT_KEY_MODE, "generated");
+  assert.equal(environment.PRODUCT_KEY_LICENSE_PREFIX, "PIRATE-POL");
+  assert.equal(environment.PRODUCT_KEY_GENERATION_KEY, "");
   assert.equal(environment.REDIS_TIMEOUT_MS, "5000");
-  assert.match(environment.PRODUCT_KEY_REDIS_PREFIX, /amoy/);
+  assert.equal(environment.PRODUCT_KEY_REDIS_PREFIX, "");
 });

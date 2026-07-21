@@ -46,6 +46,17 @@ function normalizeHex(value) {
   return value?.toLowerCase();
 }
 
+function legacyTrustWalletProvider(windowObject) {
+  const namespacedProvider = windowObject.trustwallet?.ethereum;
+  if (typeof namespacedProvider?.request === "function") return namespacedProvider;
+
+  const injected = windowObject.ethereum;
+  const candidates = Array.isArray(injected?.providers) ? injected.providers : [injected];
+  return candidates.find(
+    (provider) => provider?.isTrust === true && typeof provider.request === "function",
+  );
+}
+
 export function discoverTrustWallet(windowObject = globalThis, timeoutMs = 1_000) {
   return new Promise((resolve, reject) => {
     let timer;
@@ -61,7 +72,12 @@ export function discoverTrustWallet(windowObject = globalThis, timeoutMs = 1_000
     windowObject.addEventListener("eip6963:announceProvider", onAnnounce);
     timer = setTimeout(() => {
       cleanup();
-      reject(new Error("Trust Wallet was not detected through EIP-6963."));
+      const legacyProvider = legacyTrustWalletProvider(windowObject);
+      if (legacyProvider) {
+        resolve(legacyProvider);
+        return;
+      }
+      reject(new Error("Trust Wallet was not detected through EIP-6963 or its explicit legacy provider."));
     }, timeoutMs);
     windowObject.dispatchEvent(new windowObject.Event("eip6963:requestProvider"));
   });

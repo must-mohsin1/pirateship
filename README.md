@@ -1,6 +1,6 @@
 # Pirate Network refundable pre-order
 
-This repository contains the Pirate Network essay landing page plus a 30-day refundable pre-order flow. The checked-in public configuration currently targets the Polygon Amoy rehearsal; mainnet remains a later audited deployment.
+This repository contains the Pirate Network essay landing page plus a 30-day refundable pre-order flow. The checked-in public configuration targets the verified Polygon PoS mainnet escrow at `0xd92848868a70CCA3706EFa6bA3D2B68F18F211Ff`; the older Amoy setup is retained only as a historical rehearsal and test fixture.
 
 ## What was added
 
@@ -17,11 +17,11 @@ Release notes are tracked in [`CHANGELOG.md`](CHANGELOG.md). The remaining real-
 
 The step-by-step production gates are documented in [`docs/polygon-mainnet-runbook.md`](docs/polygon-mainnet-runbook.md). The included mainnet preflight is read-only: it validates public addresses, chain ID, review evidence, custody type, gas balance, compiler settings, and the immutable pledge conversion without accepting a private key or sending a transaction.
 
-The prepared mainnet criteria will be published at <https://pirateship.must.company/mainnet-release-criteria.html>. The independent audit is still outstanding; [`docs/security-audit-template.md`](docs/security-audit-template.md) is only a reviewer checklist and must not be represented as an audit report.
+The mainnet criteria are published at <https://pirateship.must.company/mainnet-release-criteria.html>. The exact deployment source has a published personal security review at <https://must-mohsin1.github.io/must-pirateship-audit/report.html> and exact creation/runtime matches on [Sourcify](https://repo.sourcify.dev/137/0xd92848868a70CCA3706EFa6bA3D2B68F18F211Ff). Sourcify verification proves source-to-bytecode correspondence; it is not a substitute for an independent security audit.
 
-## Resume the Amoy checkpoint
+## Historical Amoy rehearsal
 
-The repository now contains the complete tested flow. The integrated Node server serves both the landing page and `/api/*` from one origin, so product-key requests do not depend on development-only CORS configuration.
+The repository retains the Amoy backend environment and automated lifecycle tests as regression fixtures. The checked-in frontend now points to mainnet, so this historical server command is not a production or end-to-end launch configuration.
 
 Prerequisites: Node.js `22.5.0` or newer and a browser profile with a Polygon-compatible wallet such as Trust Wallet.
 
@@ -34,11 +34,11 @@ npm --prefix services/product-key test
 npm --prefix services/product-key run serve:amoy
 ```
 
-Open <http://127.0.0.1:4173/pirate-network-blog.html#preorder> in the browser profile containing Trust Wallet. The checked-in Amoy address is public configuration. Local environment files, SQLite databases, `keys.json`, and `product-keys*.json` are ignored; administrator tokens, wallet private keys, and real product-key inventory must remain outside the repository.
+Local environment files, SQLite databases, `keys.json`, and `product-keys*.json` are ignored; administrator tokens, wallet private keys, and real product-key inventory must remain outside the repository.
 
 ## User flow
 
-1. A supporter connects a Polygon-compatible wallet and places a first pre-order of at least the immutable on-chain minimum. The current Amoy rehearsal uses `0.01` test POL; the approved mainnet input is `300 POL`. Later top-ups may be any positive amount while funding remains open.
+1. A supporter connects a Polygon-compatible wallet and places a first pre-order of at least the immutable `300 POL` mainnet minimum. Later top-ups may be any positive amount while funding remains open. The older Amoy rehearsal used `0.01` test POL.
 2. The team publishes the product and records a public release-proof URL before the contract deadline. The Product Hunt launch URL can be used as that public evidence when it points to the usable release.
 3. Each supporter independently approves or does not approve. Approval releases only that supporter’s pledge and makes the wallet eligible for a product key.
 4. Every unapproved pledge becomes refundable after the deadline.
@@ -49,43 +49,47 @@ Refund eligibility activates automatically, but a blockchain contract cannot ini
 
 ## Production setup
 
-### 1. Deploy the contract
+### 1. Verified contract deployment
 
-Deploy `contracts/RefundableProductEscrow.sol` to Polygon PoS mainnet only after the intended owner, beneficiary, and minimum pledge have passed an independent security review. The deploying wallet becomes the immutable owner, while the constructor beneficiary is the only wallet allowed to withdraw approved funds. Deployment starts the immutable 30-day clock and spends real POL. The existing `0.01` POL deployment is an Amoy rehearsal only; the approved production constructor input is `300 POL` (`300000000000000000000` wei), subject to the documented finance/legal sign-off.
+`contracts/RefundableProductEscrow.sol` is deployed on Polygon PoS mainnet. The deployment transaction made its sender the immutable owner, while the constructor beneficiary is the only wallet allowed to withdraw approved funds. The immutable production minimum is `300 POL` (`300000000000000000000` wei), and the 30-day deadline is 20 August 2026 at 20:15:52 UTC.
 
 The intended owner/deployer and beneficiary are both `0xcF9178cA7360066B25de9c142A4c155abf151D6f`. The current verification state and final evidence slots are recorded in [`docs/polygon-mainnet-deployment-record.md`](docs/polygon-mainnet-deployment-record.md). The project owner selected this funded Trust Wallet EOA as a permanent single-owner exception; preflight requires explicit hot-wallet risk and offline recovery-backup attestations and never accepts the recovery phrase.
 
-Before preparing any deployment transaction, copy `.env.mainnet-preflight.example` to the ignored `.env.mainnet-preflight`, complete the public review fields, and run:
+The preflight and deployment handoff remain in the repository for reproducibility and audit evidence. They must not be used to deploy a second production contract. To reproduce the read-only preflight, copy `.env.mainnet-preflight.example` to the ignored `.env.mainnet-preflight`, complete the public review fields, and run:
 
 ```sh
 npm --prefix services/product-key run preflight:mainnet
 ```
 
-This check must report `READY_FOR_MANUAL_DEPLOYMENT_REVIEW`. It cannot deploy the contract. Follow the complete runbook before switching the public configuration away from Amoy.
+This check reports `READY_FOR_MANUAL_DEPLOYMENT_REVIEW` when its historical inputs are still reproducible. It cannot deploy the contract.
 
 The preflight prints separate Keccak-256 and SHA-256 values for the bare creation bytecode and for the full deployment initcode. Review the full deployment-initcode fingerprint: unlike the bare bytecode hash, it also commits to the approved beneficiary and immutable `300 POL` minimum pledge.
 
-After every gate is complete, start the localhost-only Trust Wallet handoff with `npm --prefix services/product-key run deploy:mainnet:local`. It recompiles the contract from the exact `SOURCE_COMMIT` Git object, refuses to start unless preflight is ready, and asks only the EIP-6963 provider identified as Trust Wallet to send that reviewed initcode. A cryptographically random `.localhost` origin avoids stale browser-origin state. A separate server-side connection to the dedicated Polygon RPC waits for 20 confirmations, verifies the first recorded transaction hash and exact mined input, and reads back the immutable on-chain terms. A durable one-way local attempt journal prevents an ambiguous retry; even a reported wallet rejection requires manual chain reconciliation. The handoff never accepts a recovery phrase or raw private key.
+The completed localhost-only Trust Wallet handoff recompiled the contract from the exact `SOURCE_COMMIT` Git object, preferred the EIP-6963 provider identified as Trust Wallet, and accepted only Trust Wallet's explicit legacy provider as a compatibility fallback. The exact `localhost` hostname matches Trust Wallet's extension permissions; strict Host validation prevents DNS rebinding. A separate server-side connection to Polygon RPC waited for 20 confirmations, verified the first recorded transaction hash and exact mined input, and read back the immutable on-chain terms. The handoff never accepted a recovery phrase or raw private key.
 
 The minimum cannot be changed after deployment. The page reads the exact value from the contract instead of trusting a frontend-only setting. Polygon USDC support is intentionally deferred; this version accepts native POL only.
 
 ### 2. Configure the landing page
 
-`escrow-config.js` currently points to the verified Amoy rehearsal contract `0x6bF097816997C242F3447A470d1cc3d170cbcB98` on chain `80002`, deployed at block `42475668`. For the later audited mainnet deployment, replace it with:
+`escrow-config.js` points to the source-verified Polygon mainnet escrow
+`0xd92848868a70CCA3706EFa6bA3D2B68F18F211Ff` on chain `137`, deployed in block
+`90639970`. The deployment transaction is
+`0x29c1ec7013fa8a953ce318f09e6bee9cc7b5b3b191c49e0885a961459091584e`,
+and the immutable deadline is 20 August 2026 at 20:15:52 UTC.
 
 ```js
 globalThis.PIRATE_ESCROW_CONFIG = Object.freeze({
-  contractAddress: "0xYOUR_DEPLOYED_POLYGON_ADDRESS",
+  contractAddress: "0xd92848868a70CCA3706EFa6bA3D2B68F18F211Ff",
   chainId: "0x89",
   chainName: "Polygon Mainnet",
   nativeSymbol: "POL",
-  rpcUrls: ["https://YOUR_PRODUCTION_RPC"],
+  rpcUrls: ["https://polygon.drpc.org"],
   explorerUrl: "https://polygonscan.com",
   keyApiBase: "",
 });
 ```
 
-Use a dedicated authenticated production RPC rather than depending on the public default. The address shown on the page and the address used by the product-key service must be identical.
+The public dRPC endpoint is the launch fallback. Replace it with a dedicated authenticated production RPC when available. The address shown on the page and the address used by the product-key service must remain identical.
 
 ### 3. Serve the product-key API
 
@@ -182,14 +186,14 @@ The root `Dockerfile` packages the landing page and product-key service into one
 Recommended first AWS deployment:
 
 1. Push the tested image to a private Amazon ECR repository.
-2. Create an ECS Fargate task exposing container port `4173`. Inject `RPC_URL` and `ADMIN_TOKEN` from AWS Secrets Manager; set the other values from `.env.aws.example` in the task definition.
+2. Create an ECS Fargate task exposing container port `4173`. Use `.env.aws-mainnet.example` as the runtime variable list and inject every blank secret value through the deployment secret manager.
 3. For the Amoy rehearsal only, mount an encrypted Amazon EFS access point at `/data`. Configure its POSIX owner as UID/GID `1000`, permissions `0700`, and enable transit encryption so the image's non-root `node` user can create the rollback-journal SQLite database. Before the first storage-mode deployment, scale the service to zero, use a one-off maintenance task to run `PRAGMA wal_checkpoint(TRUNCATE)` and `PRAGMA integrity_check`, stop that task, and take an EFS backup. Restore the backup to an isolated path and repeat the integrity check before deploying. Never copy a live database or delete its sidecars.
 4. Put the task in private subnets behind an Application Load Balancer with an ACM HTTPS certificate. Allow task port `4173` only from the load balancer security group. Set `PUBLIC_ORIGIN` to the final `https://` host and `TRUST_PROXY=true`.
 5. Keep the existing CDK probes unchanged. The ECS task calls `GET /api/health` over loopback, which the integrated server treats as liveness; the load balancer calls the same path remotely and receives full storage/RPC readiness. The Docker image's direct health check remains `GET /api/live`. This removes a task from traffic during a dependency outage without restarting the otherwise healthy process or requiring a platform-infrastructure change.
 6. Keep the service at exactly one desired task for this SQLite/process-local implementation. Set the rolling deployment limits to minimum healthy `0%` and maximum `100%` so old and new tasks do not overlap; this trades a brief deployment interruption for single-writer safety. Do not enable horizontal scaling until challenges, rate limits, and key assignment use shared production storage.
 7. Enable EFS backups, CloudWatch logs, and alarms for unhealthy targets and HTTP `5xx` responses before loading real product keys.
 
-The checked-in `.env.aws.example` still targets Polygon Amoy. For mainnet, use `.env.aws-mainnet.example`: generated mode moves assignments, challenges, and rate limits to shared Redis without modifying CDK or opening SQLite. DevOps supplies a TLS/authenticated primary write endpoint with cluster mode disabled and backups enabled, and injects `REDIS_URL` plus the other blank runtime values through the deployment environment. Keep credentials and product-key secrets in the deployment secret manager rather than plaintext task environment or a committed environment file. The application team owns the independent administrator, encryption, and generation secrets and the final contract-specific namespace. After the audited contract is deployed, update `escrow-config.js`, `CONTRACT_ADDRESS`, and `EXPECTED_CHAIN_ID=137` together and rebuild the image. Never reuse the rehearsal administrator token, Redis namespace, or secret.
+The checked-in `.env.aws.example` remains an historical Polygon Amoy fixture. Production uses `.env.aws-mainnet.example`: generated mode moves assignments, challenges, and rate limits to shared Redis without modifying CDK or opening SQLite. DevOps supplies a TLS/authenticated primary write endpoint with cluster mode disabled and backups enabled, and injects `REDIS_URL` plus the other blank runtime values through the deployment environment. Keep credentials and product-key secrets in the deployment secret manager rather than plaintext task environment or a committed environment file. The application team owns the independent administrator, encryption, and generation secrets and the final contract-specific namespace. Never reuse the rehearsal administrator token, Redis namespace, or secret.
 
 ### 4. Publish the release
 
@@ -203,8 +207,8 @@ The beneficiary can separately call `withdrawApprovedFunds()` to withdraw only t
 
 ## Mainnet safety checklist
 
-- Obtain an independent Solidity security audit before accepting funds.
-- Verify the exact contract source on PolygonScan and link the verified address.
+- Link the published personal security review, disclose that it is not independent assurance, and retain an independent Solidity audit as a follow-up risk-reduction item.
+- Link the exact Sourcify creation/runtime match and retry PolygonScan source publication if its shared daily submission limit delayed the explorer badge.
 - Prefer a multisig or hardware wallet for owner and beneficiary roles. If the approved Trust Wallet exception is used, document the permanent single-owner risk and confirm an offline recovery backup without exposing it.
 - Keep deployer keys, administrator tokens, RPC credentials, and product keys out of this repository.
 - Publish a precise definition of “released” before accepting pre-orders.

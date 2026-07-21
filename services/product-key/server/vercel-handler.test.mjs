@@ -15,18 +15,20 @@ const routeModules = await Promise.all([
 ]);
 
 const ADMIN_TOKEN = "test-admin-token-that-is-longer-than-32-characters";
-const AMOY_ADDRESS = "0x6bF097816997C242F3447A470d1cc3d170cbcB98";
+const MAINNET_ADDRESS = "0xd92848868a70CCA3706EFa6bA3D2B68F18F211Ff";
 
 function productionEnvironment(overrides = {}) {
   return {
-    RPC_URL: "https://polygon-amoy.example/rpc",
-    CONTRACT_ADDRESS: AMOY_ADDRESS,
-    EXPECTED_CHAIN_ID: "80002",
+    RPC_URL: "https://polygon.example/rpc",
+    CONTRACT_ADDRESS: MAINNET_ADDRESS,
+    EXPECTED_CHAIN_ID: "137",
     PUBLIC_ORIGIN: "https://pirate.example",
     ADMIN_TOKEN,
     UPSTASH_REDIS_REST_URL: "https://example.upstash.io",
     UPSTASH_REDIS_REST_TOKEN: "test-upstash-token",
+    PRODUCT_KEY_MODE: "generated",
     PRODUCT_KEY_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
+    PRODUCT_KEY_GENERATION_KEY: Buffer.alloc(32, 8).toString("base64"),
     ...overrides,
   };
 }
@@ -94,7 +96,7 @@ test("production setup fails closed when required Vercel secrets are absent", ()
   );
 });
 
-test("production setup accepts the checked-in Amoy deployment", () => {
+test("production setup accepts the checked-in mainnet deployment", () => {
   assert.equal(
     typeof createProductionProductKeyHandler(productionEnvironment()),
     "function",
@@ -104,15 +106,12 @@ test("production setup accepts the checked-in Amoy deployment", () => {
 test("production setup accepts unlimited generated licenses only with a generation secret", () => {
   assert.throws(
     () => createProductionProductKeyHandler(productionEnvironment({
-      PRODUCT_KEY_MODE: "generated",
+      PRODUCT_KEY_GENERATION_KEY: "",
     })),
     /PRODUCT_KEY_GENERATION_KEY is required/,
   );
   assert.equal(
-    typeof createProductionProductKeyHandler(productionEnvironment({
-      PRODUCT_KEY_MODE: "generated",
-      PRODUCT_KEY_GENERATION_KEY: Buffer.alloc(32, 8).toString("base64"),
-    })),
+    typeof createProductionProductKeyHandler(productionEnvironment()),
     "function",
   );
 });
@@ -126,7 +125,7 @@ test("production setup rejects contract or chain drift from the landing page", (
   );
   assert.throws(
     () => createProductionProductKeyHandler(productionEnvironment({
-      EXPECTED_CHAIN_ID: "137",
+      EXPECTED_CHAIN_ID: "80002",
     })),
     /chain IDs differ/,
   );

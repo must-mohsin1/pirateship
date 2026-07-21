@@ -2,9 +2,14 @@
 
 This runbook starts after the Polygon Amoy rehearsal. It deliberately separates preparation from deployment: no mainnet contract should be deployed and no real pledge should be accepted until every blocking gate is closed.
 
-## Current decision: keep Amoy public
+## Current state: mainnet deployed and verified
 
-The landing page remains connected to Amoy contract `0x6bF097816997C242F3447A470d1cc3d170cbcB98`. Do not replace that address with a mainnet address until the production contract is audited, deployed, source-verified, and checked with the read-only steps below.
+The mainnet escrow is deployed at `0xd92848868a70CCA3706EFa6bA3D2B68F18F211Ff`
+in block `90639970`. Transaction
+`0x29c1ec7013fa8a953ce318f09e6bee9cc7b5b3b191c49e0885a961459091584e`
+passed the 20-confirmation controller check and a separate read-only RPC check.
+Sourcify reports exact creation and runtime matches. The remaining work is the
+production configuration deploy, service canary, and usable-product release.
 
 Polygon PoS mainnet uses chain ID `137` and native gas token `POL`. Use a dedicated authenticated RPC for production. Never paste a seed phrase or private key into this project, its environment files, Remix, a Slack message, or a support ticket.
 
@@ -23,9 +28,9 @@ Before deployment, publish one stable HTTPS page that defines all of the followi
 
 The public criteria are prepared at `https://pirateship.must.company/mainnet-release-criteria.html`. That URL counts as published only after the page is merged, deployed, and reachable without authentication. Complete any additional legal review required by company policy before opening the campaign.
 
-## Gate 2: audit and custody
+## Gate 2: security review and custody
 
-Obtain an independent Solidity audit against the exact Git commit and compiler configuration intended for deployment: Solidity `0.8.30`, optimizer enabled with `200` runs, and EVM target `paris`. Give the reviewer [`security-audit-template.md`](security-audit-template.md) as a checklist. The template is not an audit and does not satisfy this gate.
+The deployed source received a published personal security review against the exact Git commit and compiler configuration: Solidity `0.8.30`, optimizer enabled with `200` runs, and EVM target `paris`. The reviewer of record is Mohsin Zahid, who is also part of the project; this is not an independent audit. Sourcify's exact creation/runtime match confirms that the published source corresponds to the deployed bytecode, but it does not prove the contract is secure. The project owner explicitly accepted proceeding with this residual risk; an independent Solidity audit remains a recommended follow-up.
 
 The current contract makes the transaction sender the immutable owner. Therefore the final deployment transaction must originate from the reviewed owner address. A hardware wallet or multisig remains the recommended custody. The project owner selected a dedicated Trust Wallet EOA as an explicit exception for this launch. That exception is accepted only when `HOT_WALLET_RISK_ACCEPTED=yes` and `WALLET_RECOVERY_BACKUP_CONFIRMED=yes`; neither flag substitutes for an independent audit or permits recording a recovery phrase anywhere in the project.
 
@@ -73,7 +78,7 @@ Only then start the localhost-only deployment handoff:
 npm --prefix services/product-key run deploy:mainnet:local
 ```
 
-Open the freshly printed `http://<random>.localhost:<port>/` URL in the browser that has the Trust Wallet extension. The cryptographically random hostname creates a fresh browser origin, and the controller rejects every other `Host` value. The page also refuses to operate if a service worker controls that origin. The tool reruns the complete preflight, refuses to start while any gate is blocked, serves no RPC credentials, and accepts only the EIP-6963 provider identified as Trust Wallet. It asks that wallet to send the exact reviewed deployment initcode. Confirm the wallet displays Polygon mainnet, the expected deploying account, zero transfer value, and a nonzero real-POL gas fee. The `300 POL` value is the immutable minimum pledge encoded in the contract, not POL sent by the deployment transaction. Never paste a recovery phrase or private key into the page, project, console, or terminal.
+Open the freshly printed `http://localhost:<random-port>/` URL in the browser that has the Trust Wallet extension. Trust Wallet's Chrome permissions cover exact `localhost`, while the ephemeral port still creates a fresh origin and the controller rejects every other `Host` value. The page also refuses to operate if a service worker controls that origin. The tool reruns the complete preflight, refuses to start while any gate is blocked, serves no RPC credentials, prefers the EIP-6963 Trust Wallet provider, and accepts only Trust Wallet's explicit legacy provider as a compatibility fallback. It asks that wallet to send the exact reviewed deployment initcode. Confirm the wallet displays Polygon mainnet, the expected deploying account, zero transfer value, and a nonzero real-POL gas fee. The `300 POL` value is the immutable minimum pledge encoded in the contract, not POL sent by the deployment transaction. Never paste a recovery phrase or private key into the page, project, console, or terminal.
 
 The local page requires the review acknowledgement and exact displayed confirmation phrase before it can call `eth_sendTransaction`. The wallet cannot self-verify success: the localhost controller separately uses the dedicated Polygon RPC, waits for 20 confirmations, compares the actual transaction input with the reviewed initcode, and reads back the owner, beneficiary, minimum pledge, exact deadline, phase, and release flag. A timeout or mismatch fails closed. Keep the independent PolygonScan checks below as a second verification channel.
 
@@ -83,7 +88,7 @@ Deployment starts the immutable 30-day clock immediately. Schedule it only when 
 
 ## Gate 5: verify before publishing
 
-After deployment, do not accept pledges yet. Copy the transaction hash, contract address, deployment block, and deadline printed by the local handoff into the deployment record. Then verify the exact source, transaction input, and constructor arguments independently on PolygonScan. Read these values back from both the dedicated RPC and PolygonScan:
+After deployment, do not accept pledges yet. Copy the transaction hash, contract address, deployment block, and deadline printed by the local handoff into the deployment record. Then verify the exact source, transaction input, and constructor arguments through an independent RPC and a public source verifier. For this deployment, Sourcify recorded exact creation and runtime matches; its automatic Etherscan forwarding hit the explorer's shared daily submission limit, so retry the PolygonScan badge separately. Read these values back from the independent RPC:
 
 - `owner` equals the reviewed owner/deployer;
 - `beneficiary` equals the reviewed treasury;

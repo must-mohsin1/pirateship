@@ -127,7 +127,10 @@ export async function startLocalDeploymentServer({
     readFile(browserScriptUrl, "utf8"),
   ]);
   const attemptToken = randomBytes(32).toString("hex");
-  const hostname = `${randomBytes(16).toString("hex")}.localhost`;
+  // Trust Wallet's Chrome extension grants provider access to exact localhost,
+  // but not to randomized *.localhost subdomains. The ephemeral port still
+  // creates a fresh browser origin, and the Host check below prevents rebinding.
+  const hostname = "localhost";
   const browserConfig = { ...deploymentConfig, attemptToken };
   const deploymentJson = JSON.stringify(browserConfig);
   const server = createServer(async (request, response) => {

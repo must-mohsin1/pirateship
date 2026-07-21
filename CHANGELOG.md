@@ -2,6 +2,27 @@
 
 All notable changes to Pirate Network are documented in this file.
 
+## [0.3.1.0] - 2026-07-22
+
+### Added
+
+- The live Polygon mainnet deployment record now publishes contract `0xd92848868a70CCA3706EFa6bA3D2B68F18F211Ff`, transaction `0x29c1ec7013fa8a953ce318f09e6bee9cc7b5b3b191c49e0885a961459091584e`, block `90639970`, the exact deadline, and the public security-review and Sourcify evidence.
+
+### Changed
+
+- The landing page and production environment samples now use Polygon chain `137`, the immutable `300 POL` minimum, the deployed mainnet escrow, and generated `PIRATE-POL-*` licenses backed by shared Redis.
+- Campaign copy now clearly states that POL has real monetary value, approval is permanent, and unapproved refunds require an on-chain transaction after the deadline.
+
+### Fixed
+
+- The reviewed Trust Wallet handoff now uses exact `localhost`, which is covered by the extension's host permissions, while preserving a fresh ephemeral-port origin and strict DNS-rebinding protection.
+- Wallet discovery still prefers EIP-6963 but can use only Trust Wallet's explicit legacy provider; unmarked generic injected wallets remain rejected.
+
+### Security
+
+- Frontend and product-key services fail closed unless the exact mainnet contract and chain match, and Polygon mainnet refuses SQLite/inventory key mode.
+- Sourcify independently reproduced exact creation and runtime bytecode matches with Solidity `0.8.30`, optimizer `200`, and EVM target `paris`.
+
 ## [0.3.0.3] - 2026-07-21
 
 ### Added

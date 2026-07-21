@@ -1,34 +1,41 @@
-# Mainnet launch follow-ups
+# Polygon mainnet launch follow-ups
 
-The Amoy rehearsal is complete. Do not accept real Polygon mainnet funds until every blocking item below is closed.
+The escrow is deployed and source-verified on Polygon PoS mainnet. Do not deploy
+a replacement contract. This list tracks the application rollout and operating
+work that remains.
 
-## Completed preparation
+## Completed
 
-- [x] Add a read-only chain/custody/price/audit preflight that cannot access wallet secrets or deploy a contract.
-- [x] Pin the Solidity compiler version and document the exact optimizer and EVM settings used for the deployment fingerprint.
-- [x] Write a staged Polygon mainnet runbook that keeps the public page on Amoy until source and constructor verification pass.
+- [x] Approve the immutable `300 POL` minimum pledge.
+- [x] Publish the personal security review against source commit `89018f0ee3b04538a7baab4cc58e7d03325bf7f4`.
+- [x] Deploy the reviewed initcode from the approved owner wallet with zero transaction value.
+- [x] Verify owner, beneficiary, minimum pledge, deadline, initial phase, receipt, and transaction input through an independent RPC read.
+- [x] Publish exact creation and runtime source matches on Sourcify.
+- [x] Publish objective release criteria and the escrow deadline.
+- [x] Implement unlimited, stable per-wallet generated licenses backed by shared Redis.
+- [x] Record the explicit single-owner Trust Wallet risk exception and offline recovery backup attestation.
 
-## Security and custody
+## Before directing supporters to pledge
 
-- [ ] Obtain an independent Solidity audit, including malicious receiver, transfer-failure, and reentrancy tests.
-- [ ] Put the contract owner and beneficiary roles behind a reviewed multisig or hardware-wallet process; document the release transaction approval policy.
-- [ ] Resolve the immutable-owner deployment path: the current deployer becomes `owner`, so a multi-administrator launch needs a reviewed multisig direct-deployment mechanism or an explicit-owner constructor revision followed by audit.
-- [ ] Verify the final source and constructor arguments on PolygonScan before publishing the mainnet address.
-- [ ] Require finalized or sufficiently confirmed approval state before assigning an irreversible product key.
-- [ ] Resolve or formally isolate the audit findings in the Ganache/Solidity development toolchain before running it on untrusted contributions; the production dependency audit is currently clean.
+- [ ] Merge and deploy the mainnet frontend/API configuration in this release.
+- [ ] Inject the production runtime values from `.env.aws-mainnet.example`: chain `137`, the deployed contract, generated-key mode, Redis, and two independent product-key secrets.
+- [ ] Confirm `/api/live` and `/api/health` are healthy and the deployed landing page displays the exact contract, `300 POL` minimum, and deadline.
+- [ ] Confirm the released product can validate generated `PIRATE-POL-*` licenses. Do not call `markProductReleased` until a usable product URL exists and satisfies the published criteria.
+- [ ] Exercise a read-only production wallet connection and contract-state refresh. Because the minimum is `300 POL`, do not send a throwaway canary pledge from the deployer wallet; monitor the first authorized supporter pledge as the controlled canary.
+- [ ] Enable alerts for RPC failures, Redis availability, secret-fingerprint mismatch, escrow events, and the deadline/refund queue.
 
-## Product and pricing
+## Accepted residual risks and non-blocking follow-ups
 
-- [ ] Guarantee one product key for every supporter before mainnet approval can irreversibly release a pledge. Choose an enforceable reservation or unlimited-license design, then test inventory exhaustion and concurrent approvals end to end.
-- [ ] Approve the mainnet minimum pledge with finance/legal review. `250 POL` is only a proposal; Polygon USDC pricing remains intentionally deferred.
-- [ ] Publish objective, supporter-visible acceptance criteria for “product released” and the exact Product Hunt or product URL that may be recorded as proof.
-- [ ] Complete the Korean localization of live escrow controls and wallet/error states; the Amoy transaction controls currently remain explicitly English.
+- [ ] Obtain an independent Solidity audit when a qualified external reviewer becomes available. The published personal review and Sourcify exact match do not constitute independent assurance.
+- [ ] Move future campaign administration to reviewed multisig or hardware-wallet custody. This deployed contract's owner is immutable and remains the explicitly accepted Trust Wallet EOA.
+- [ ] Replace the public dRPC launch fallback with a dedicated authenticated Polygon RPC when available.
+- [ ] Retry the PolygonScan source-code badge after the explorer submission limit clears. Sourcify exact verification is already public.
+- [ ] Test Redis backup/restore and the product-key secret recovery procedure without exposing secret values.
+- [ ] Complete Korean localization of live escrow controls and wallet/error states.
 
-## Production service
+## Release and refund operations
 
-- [x] Add Vercel Functions backed by shared Redis TTL challenges, shared rate limits, and atomic cross-instance per-wallet issuance coordination.
-- [x] Encrypt Redis product-key inventory with a server-only AES-256-GCM key before storage.
-- [ ] Replace the Amoy-only SQLite/EFS rehearsal store with a backed-up client/server datastore before mainnet; migrate inventory and wallet assignments, then test rollback and recovery.
-- [ ] Provision the production Redis integration, restrict its credentials, enable persistence/backups, add inventory monitoring, and test the recovery procedure.
-- [ ] Use a dedicated authenticated Polygon RPC, reduce campaign-read bursts, and monitor provider throttling and chain reorganizations.
-- [ ] Run end-to-end staging tests for wrong-network switching, receipt timeout/revert recovery, CORS/proxy behavior, graceful shutdown, and concurrent key redemption.
+- [ ] Publish the usable product URL before 20 August 2026 at 20:15:52 UTC.
+- [ ] After independently checking the usable product against the criteria, submit `markProductReleased` from the owner wallet and record the public proof URL.
+- [ ] Monitor supporter approvals and generated-key delivery without asking anyone for wallet secrets.
+- [ ] After the deadline, publish refund instructions and monitor unapproved pledges until supporters submit their refund transactions.
