@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import test from "node:test";
-import { RedisKeyStore } from "./redis-key-store.mjs";
+import {
+  GeneratedRedisKeyStore,
+  RedisKeyStore,
+} from "./redis-key-store.mjs";
 
 class FakeRedis {
   constructor() {
@@ -76,6 +79,13 @@ class FakeRedis {
   }
 
   async eval(script, keys, args) {
+    if (script.includes('return {ARGV[1], "0"}')) {
+      const existing = this.values.get(keys[0]);
+      if (existing) return [existing, "1"];
+      this.values.set(keys[0], args[0]);
+      this.values.set(keys[1], Number(this.values.get(keys[1]) ?? 0) + 1);
+      return [args[0], "0"];
+    }
     if (script.includes("SADD")) {
       const digests = this.sets.get(keys[0]) ?? new Set();
       this.sets.set(keys[0], digests);
@@ -137,6 +147,20 @@ function fixture() {
     redis,
     encryptionKey: randomBytes(32).toString("base64"),
     prefix: "test:pirate",
+  });
+  return { redis, store };
+}
+
+function generatedFixture(overrides = {}) {
+  const redis = overrides.redis ?? new FakeRedis();
+  const store = new GeneratedRedisKeyStore({
+    redis,
+    encryptionKey: overrides.encryptionKey ?? Buffer.alloc(32, 1).toString("base64"),
+    generationKey: overrides.generationKey ?? Buffer.alloc(32, 2).toString("base64"),
+    generationContext: overrides.generationContext ??
+      "137:0x0000000000000000000000000000000000000001",
+    prefix: "test:generated",
+    licensePrefix: "PIRATE-POL",
   });
   return { redis, store };
 }
@@ -333,4 +357,131 @@ test("Redis assigns different keys during concurrent redemption", async () => {
     assigned: 2,
     quarantined: 0,
   });
+});
+
+test("unlimited Redis licenses are stable, distinct, and do not need inventory", async () => {
+  const { store } = generatedFixture();
+  await store.healthCheck();
+
+  const first = await store.assignKey("0xAABB");
+  assert.equal(first.existing, false);
+  assert.match(first.productKey, /^PIRATE-POL-[A-F0-9]{32}$/);
+  assert.deepEqual(await store.assignKey("0xaabb"), {
+    productKey: first.productKey,
+    existing: true,
+  });
+  const second = await store.assignKey("0xCCDD");
+  assert.notEqual(second.productKey, first.productKey);
+  assert.deepEqual(await store.stats(), {
+    mode: "unlimited",
+    total: null,
+    available: null,
+    assigned: 2,
+    quarantined: 0,
+  });
+});
+
+test("concurrent unlimited redemption creates one assignment for a wallet", async () => {
+  const { store } = generatedFixture();
+  const [first, second] = await Promise.all([
+    store.assignKey("0xAABB"),
+    store.assignKey("0xaabb"),
+  ]);
+
+  assert.equal(first.productKey, second.productKey);
+  assert.deepEqual(new Set([first.existing, second.existing]), new Set([false, true]));
+  assert.equal((await store.stats()).assigned, 1);
+});
+
+test("unlimited licenses are bound to the deployment context", async () => {
+  const sharedGenerationKey = Buffer.alloc(32, 3).toString("base64");
+  const first = generatedFixture({
+    generationKey: sharedGenerationKey,
+    generationContext: "137:0x0000000000000000000000000000000000000001",
+  }).store.generatedProductKey("0xAABB");
+  const second = generatedFixture({
+    generationKey: sharedGenerationKey,
+    generationContext: "80002:0x0000000000000000000000000000000000000001",
+  }).store.generatedProductKey("0xAABB");
+
+  assert.notEqual(first, second);
+});
+
+test("unlimited mode disables finite inventory imports", async () => {
+  const { store } = generatedFixture();
+  await assert.rejects(
+    () => store.addKeys(["PIRATE-LEGACY"]),
+    (error) => error.status === 409 && error.exposeToClient === true,
+  );
+});
+
+test("unlimited mode rejects generation-key rotation before changing assignments", async () => {
+  const { redis, store } = generatedFixture();
+  const assignment = await store.assignKey("0xAABB");
+  const rotated = generatedFixture({
+    redis,
+    generationKey: Buffer.alloc(32, 9).toString("base64"),
+  }).store;
+
+  await assert.rejects(
+    () => rotated.assignKey("0xCCDD"),
+    /GENERATION_KEY does not match/,
+  );
+  assert.deepEqual(await store.assignKey("0xAABB"), {
+    productKey: assignment.productKey,
+    existing: true,
+  });
+  assert.equal((await store.stats()).assigned, 1);
+});
+
+test("unlimited mode fails closed when its fingerprint is missing or inventory is mixed", async () => {
+  const missing = generatedFixture();
+  await missing.store.assignKey("0xAABB");
+  missing.redis.values.delete("test:generated:generation-key-fingerprint");
+  await assert.rejects(
+    () => missing.store.assignKey("0xCCDD"),
+    /assignments exist without complete generation fingerprints/,
+  );
+
+  const mixed = generatedFixture();
+  mixed.redis.sets.set("test:generated:inventory:digests", new Set(["legacy"]));
+  await assert.rejects(
+    () => mixed.store.healthCheck(),
+    /Finite Redis inventory exists/,
+  );
+});
+
+test("unlimited mode rejects Redis namespaces from another chain or contract", async () => {
+  const { redis, store } = generatedFixture();
+  const original = await store.assignKey("0xAABB");
+  const wrongDeployment = generatedFixture({
+    redis,
+    generationContext: "137:0x0000000000000000000000000000000000000002",
+  }).store;
+
+  await assert.rejects(
+    () => wrongDeployment.assignKey("0xAABB"),
+    /chain or escrow contract does not match/,
+  );
+  assert.deepEqual(await store.assignKey("0xAABB"), {
+    productKey: original.productKey,
+    existing: true,
+  });
+});
+
+test("unlimited mode validates its generation secret and display prefix", () => {
+  assert.throws(
+    () => generatedFixture({ generationKey: "short" }),
+    /PRODUCT_KEY_GENERATION_KEY must be a base64-encoded 32-byte key/,
+  );
+  assert.throws(
+    () => new GeneratedRedisKeyStore({
+      redis: new FakeRedis(),
+      encryptionKey: Buffer.alloc(32, 1).toString("base64"),
+      generationKey: Buffer.alloc(32, 2).toString("base64"),
+      generationContext: "137:contract",
+      licensePrefix: "PIRATE KEY",
+    }),
+    /PRODUCT_KEY_LICENSE_PREFIX/,
+  );
 });

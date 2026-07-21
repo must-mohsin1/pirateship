@@ -10,6 +10,7 @@ import {
 const ENCRYPTION_AAD = Buffer.from("pirate-product-key-v1", "utf8");
 const ENCRYPTION_VERSION = "v1";
 const MAX_ASSIGNMENT_ATTEMPTS = 16;
+const GENERATED_LICENSE_VERSION = "v1";
 
 const ADD_KEY_SCRIPT = `
   if redis.call("SADD", KEYS[1], ARGV[1]) == 0 then
@@ -78,10 +79,21 @@ const RATE_LIMIT_SCRIPT = `
   return count
 `;
 
-function parseEncryptionKey(value) {
+const ASSIGN_GENERATED_KEY_SCRIPT = `
+  local existing = redis.call("GET", KEYS[1])
+  if existing then
+    return {existing, "1"}
+  end
+
+  redis.call("SET", KEYS[1], ARGV[1])
+  redis.call("INCR", KEYS[2])
+  return {ARGV[1], "0"}
+`;
+
+function parseSecretKey(value, name) {
   const key = Buffer.from(value || "", "base64");
   if (key.length !== 32) {
-    throw new Error("PRODUCT_KEY_ENCRYPTION_KEY must be a base64-encoded 32-byte key.");
+    throw new Error(`${name} must be a base64-encoded 32-byte key.`);
   }
   return key;
 }
@@ -96,7 +108,7 @@ export class RedisKeyStore {
   constructor({ redis, encryptionKey, prefix = "pirate:product-key" }) {
     if (!redis) throw new Error("A Redis client is required.");
     this.redis = redis;
-    this.encryptionKey = parseEncryptionKey(encryptionKey);
+    this.encryptionKey = parseSecretKey(encryptionKey, "PRODUCT_KEY_ENCRYPTION_KEY");
     this.encryptionKeyFingerprint = createHash("sha256")
       .update(this.encryptionKey)
       .digest("base64url");
@@ -308,5 +320,172 @@ export class RedisKeyStore {
       [String(windowMs)],
     );
     return Number(count) > maxRequests;
+  }
+}
+
+export class GeneratedRedisKeyStore extends RedisKeyStore {
+  constructor({
+    redis,
+    encryptionKey,
+    generationKey,
+    generationContext,
+    prefix = "pirate:product-key",
+    licensePrefix = "PIRATE-POL",
+  }) {
+    super({ redis, encryptionKey, prefix });
+    this.generationKey = parseSecretKey(
+      generationKey,
+      "PRODUCT_KEY_GENERATION_KEY",
+    );
+    this.generationKeyFingerprint = createHash("sha256")
+      .update(this.generationKey)
+      .digest("base64url");
+    this.generationContext = String(generationContext ?? "").trim();
+    if (!this.generationContext) {
+      throw new Error("A product-key generation context is required.");
+    }
+    this.generationContextFingerprint = createHash("sha256")
+      .update(this.generationContext, "utf8")
+      .digest("base64url");
+    this.licensePrefix = String(licensePrefix).trim().toUpperCase();
+    if (!/^[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(this.licensePrefix)) {
+      throw new Error(
+        "PRODUCT_KEY_LICENSE_PREFIX must contain uppercase letters, numbers, and single hyphens only.",
+      );
+    }
+  }
+
+  async ensureGenerationKey() {
+    const fingerprintKey = this.key("generation-key-fingerprint");
+    const contextFingerprintKey = this.key("generation-context-fingerprint");
+    const [
+      initialFingerprint,
+      initialContextFingerprint,
+      finiteTotal,
+      finiteAvailable,
+      assigned,
+    ] = await Promise.all([
+        this.redis.get(fingerprintKey),
+        this.redis.get(contextFingerprintKey),
+        this.redis.scard(this.key("inventory:digests")),
+        this.redis.llen(this.key("inventory:available")),
+        this.redis.get(this.key("inventory:assigned-count")),
+      ]);
+    if (Number(finiteTotal ?? 0) > 0 || Number(finiteAvailable ?? 0) > 0) {
+      throw new Error(
+        "Finite Redis inventory exists in the unlimited-license namespace.",
+      );
+    }
+
+    let storedFingerprint = initialFingerprint;
+    let storedContextFingerprint = initialContextFingerprint;
+    if (!storedFingerprint || !storedContextFingerprint) {
+      if (Number(assigned ?? 0) > 0) {
+        throw new Error(
+          "Generated assignments exist without complete generation fingerprints. Refusing to mutate them.",
+        );
+      }
+      await Promise.all([
+        this.redis.set(
+          fingerprintKey,
+          this.generationKeyFingerprint,
+          { nx: true },
+        ),
+        this.redis.set(
+          contextFingerprintKey,
+          this.generationContextFingerprint,
+          { nx: true },
+        ),
+      ]);
+      [storedFingerprint, storedContextFingerprint] = await Promise.all([
+        this.redis.get(fingerprintKey),
+        this.redis.get(contextFingerprintKey),
+      ]);
+    }
+
+    const stored = Buffer.from(String(storedFingerprint));
+    const expected = Buffer.from(this.generationKeyFingerprint);
+    if (stored.length !== expected.length || !timingSafeEqual(stored, expected)) {
+      throw new Error(
+        "PRODUCT_KEY_GENERATION_KEY does not match this Redis assignment namespace.",
+      );
+    }
+    const storedContext = Buffer.from(String(storedContextFingerprint));
+    const expectedContext = Buffer.from(this.generationContextFingerprint);
+    if (
+      storedContext.length !== expectedContext.length ||
+      !timingSafeEqual(storedContext, expectedContext)
+    ) {
+      throw new Error(
+        "The chain or escrow contract does not match this Redis assignment namespace.",
+      );
+    }
+  }
+
+  async healthCheck() {
+    const response = await this.redis.ping();
+    if (response !== "PONG") throw new Error("Redis health check failed.");
+    await this.ensureGenerationKey();
+    await this.ensureEncryptionKey();
+  }
+
+  generatedProductKey(address) {
+    const digest = createHmac("sha256", this.generationKey)
+      .update(GENERATED_LICENSE_VERSION, "utf8")
+      .update("\0", "utf8")
+      .update(this.generationContext, "utf8")
+      .update("\0", "utf8")
+      .update(address.toLowerCase(), "utf8")
+      .digest()
+      .subarray(0, 16)
+      .toString("hex")
+      .toUpperCase();
+    return `${this.licensePrefix}-${digest}`;
+  }
+
+  async addKeys() {
+    const error = new Error(
+      "This deployment generates one unlimited license per approved wallet; inventory imports are disabled.",
+    );
+    error.status = 409;
+    error.exposeToClient = true;
+    throw error;
+  }
+
+  async assignKey(address) {
+    await this.ensureEncryptionKey();
+    await this.ensureGenerationKey();
+    const normalizedAddress = address.toLowerCase();
+    const productKey = this.generatedProductKey(normalizedAddress);
+    const encrypted = this.encryptProductKey(productKey);
+    const assigned = await this.redis.eval(
+      ASSIGN_GENERATED_KEY_SCRIPT,
+      [
+        this.key(`assignment:${normalizedAddress}`),
+        this.key("inventory:assigned-count"),
+      ],
+      [encrypted],
+    );
+    if (!Array.isArray(assigned) || assigned.length < 2) {
+      const error = new Error("Generated product-key assignment failed.");
+      error.status = 503;
+      error.safeStatus = true;
+      throw error;
+    }
+    return {
+      productKey: this.decryptProductKey(String(assigned[0])),
+      existing: String(assigned[1]) === "1",
+    };
+  }
+
+  async stats() {
+    const assigned = await this.redis.get(this.key("inventory:assigned-count"));
+    return {
+      mode: "unlimited",
+      total: null,
+      available: null,
+      assigned: Number(assigned ?? 0),
+      quarantined: 0,
+    };
   }
 }

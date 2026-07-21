@@ -200,6 +200,43 @@ test("the administrator endpoint accepts its documented 1,000-key batch", async 
   }
 });
 
+test("generated mode keeps the administrator endpoint authenticated and rejects uploads", async () => {
+  const store = new KeyStore();
+  store.addKeys = async () => {
+    const error = new Error(
+      "This deployment generates one unlimited license per approved wallet; inventory imports are disabled.",
+    );
+    error.status = 409;
+    error.exposeToClient = true;
+    throw error;
+  };
+  const handler = createApiHandler({
+    store,
+    verifyEntitlement: async () => ({ eligible: true }),
+    publicOrigin: "http://127.0.0.1",
+    adminToken: ADMIN_TOKEN,
+  });
+  const originalConsoleError = console.error;
+  console.error = () => {};
+  try {
+    assert.equal(
+      (await post(handler, "/api/admin/keys", { keys: ["PIRATE-LEGACY"] })).status,
+      401,
+    );
+    const response = await post(
+      handler,
+      "/api/admin/keys",
+      { keys: ["PIRATE-LEGACY"] },
+      ADMIN_TOKEN,
+    );
+    assert.equal(response.status, 409);
+    assert.match(response.body.error, /unlimited license/);
+  } finally {
+    console.error = originalConsoleError;
+    store.close();
+  }
+});
+
 test("invalid rate-limit configuration fails closed", () => {
   const store = new KeyStore();
   const options = {

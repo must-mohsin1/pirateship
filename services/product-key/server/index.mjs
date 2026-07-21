@@ -8,6 +8,10 @@ import { createContractVerifier } from "./contract-verifier.mjs";
 import { assertPublicDeploymentMatches } from "./config-consistency.mjs";
 import { KeyStore } from "./key-store.mjs";
 import {
+  createRedisProductKeyStore,
+  productKeyMode,
+} from "./redis-store-factory.mjs";
+import {
   integerEnvironment,
   normalizePublicOrigin,
   requireEnvironment,
@@ -16,11 +20,6 @@ import { resolvePublicFile } from "./static-files.mjs";
 
 const serviceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(serviceRoot, "../..");
-const configuredDatabasePath = process.env.DATABASE_PATH ?? "data/product-keys.db";
-const databasePath =
-  configuredDatabasePath === ":memory:"
-    ? configuredDatabasePath
-    : resolve(serviceRoot, configuredDatabasePath);
 const port = integerEnvironment(process.env, "PORT", "4173", 0);
 const host = process.env.HOST ?? "127.0.0.1";
 const publicOrigin = normalizePublicOrigin(
@@ -52,12 +51,27 @@ assertPublicDeploymentMatches(
 );
 
 process.umask(0o077);
-if (databasePath !== ":memory:") {
-  mkdirSync(dirname(databasePath), { recursive: true, mode: 0o700 });
-  chmodSync(dirname(databasePath), 0o700);
+const mode = productKeyMode(process.env);
+let store;
+if (mode === "generated") {
+  store = createRedisProductKeyStore({
+    environment: process.env,
+    contractAddress,
+    expectedChainId,
+  });
+} else {
+  const configuredDatabasePath = process.env.DATABASE_PATH ?? "data/product-keys.db";
+  const databasePath =
+    configuredDatabasePath === ":memory:"
+      ? configuredDatabasePath
+      : resolve(serviceRoot, configuredDatabasePath);
+  if (databasePath !== ":memory:") {
+    mkdirSync(dirname(databasePath), { recursive: true, mode: 0o700 });
+    chmodSync(dirname(databasePath), 0o700);
+  }
+  store = new KeyStore(databasePath);
+  if (databasePath !== ":memory:") chmodSync(databasePath, 0o600);
 }
-const store = new KeyStore(databasePath);
-if (databasePath !== ":memory:") chmodSync(databasePath, 0o600);
 const verifyEntitlement = createContractVerifier({
   rpcUrl,
   contractAddress,
@@ -169,7 +183,7 @@ server.listen(port, host, () => {
 
 function shutdown() {
   server.close(() => {
-    store.close();
+    if (typeof store.close === "function") store.close();
     process.exit(0);
   });
 }
