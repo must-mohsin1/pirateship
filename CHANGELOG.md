@@ -2,6 +2,21 @@
 
 All notable changes to Pirate Network are documented in this file.
 
+## [0.3.0.2] - 2026-07-21
+
+### Added
+
+- The integrated AWS service can now use DevOps-managed standard Redis directly through `REDIS_URL`, while the existing Upstash REST transport remains available for Vercel.
+
+### Changed
+
+- Mainnet product-key assignments, challenges, and rate limits now share one lazily connected, gracefully closed Redis client without requiring CDK or GitHub Actions changes.
+- Production guidance now documents the direct environment variables, TLS/authenticated non-cluster Redis endpoint, backups, and independent product-key secrets required for launch.
+
+### Security
+
+- Polygon mainnet startup now refuses inventory/SQLite mode, standard Redis rejects insecure production URLs and clustered endpoints, and stalled Redis connections are bounded by the configured timeout.
+
 ## [0.3.0.1] - 2026-07-21
 
 ### Changed

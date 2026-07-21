@@ -41,7 +41,7 @@ test("the server supports in-memory SQLite without creating a database file", as
   await assert.rejects(access(memoryFile));
 });
 
-test("the integrated server can select generated Redis licenses without touching SQLite", async (context) => {
+test("the integrated server selects standard generated Redis without touching SQLite", async (context) => {
   const databaseFile = new URL("../generated-mode-must-not-create.db", import.meta.url);
   await assert.rejects(access(databaseFile));
 
@@ -58,9 +58,9 @@ test("the integrated server can select generated Redis licenses without touching
       PRODUCT_KEY_GENERATION_KEY: Buffer.alloc(32, 2).toString("base64"),
       PRODUCT_KEY_MODE: "generated",
       PUBLIC_ORIGIN: "http://127.0.0.1:0",
+      REDIS_CLUSTER_MODE: "false",
+      REDIS_URL: "rediss://default:example@redis.example:6379",
       RPC_URL: "http://127.0.0.1:9",
-      UPSTASH_REDIS_REST_TOKEN: "test-token",
-      UPSTASH_REDIS_REST_URL: "https://example.upstash.io",
     },
   });
   context.after(() => child.kill("SIGKILL"));

@@ -321,6 +321,10 @@ export class RedisKeyStore {
     );
     return Number(count) > maxRequests;
   }
+
+  async close() {
+    if (typeof this.redis.close === "function") await this.redis.close();
+  }
 }
 
 export class GeneratedRedisKeyStore extends RedisKeyStore {
