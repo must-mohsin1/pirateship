@@ -28,6 +28,7 @@ The Amoy rehearsal is complete. Do not accept real Polygon mainnet funds until e
 
 - [x] Add Vercel Functions backed by shared Redis TTL challenges, shared rate limits, and atomic cross-instance per-wallet issuance coordination.
 - [x] Encrypt Redis product-key inventory with a server-only AES-256-GCM key before storage.
+- [ ] Replace the Amoy-only SQLite/EFS rehearsal store with a backed-up client/server datastore before mainnet; migrate inventory and wallet assignments, then test rollback and recovery.
 - [ ] Provision the production Redis integration, restrict its credentials, enable persistence/backups, add inventory monitoring, and test the recovery procedure.
 - [ ] Use a dedicated authenticated Polygon RPC, reduce campaign-read bursts, and monitor provider throttling and chain reorganizations.
 - [ ] Run end-to-end staging tests for wrong-network switching, receipt timeout/revert recovery, CORS/proxy behavior, graceful shutdown, and concurrent key redemption.

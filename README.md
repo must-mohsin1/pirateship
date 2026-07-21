@@ -115,8 +115,8 @@ The integrated long-running server keeps `keyApiBase` empty as well. When it is 
 
 The API uses JSON and returns errors as `{ "error": "..." }`:
 
-- `GET /api/live` returns `{ "ok": true }` when the integrated Node process is running. Container health checks use this endpoint so a temporary upstream outage does not restart a healthy process.
-- `GET /api/health` checks the configured Polygon contract and, on Vercel, Redis, then returns `{ "ok": true }`. A dependency or configuration failure returns HTTP `500` with `{ "error": "The product-key service could not complete the request. Try again shortly." }`; load balancers use this readiness endpoint to stop routing traffic until the dependency recovers.
+- `GET /api/live` returns `{ "ok": true }` when the integrated Node process is running and remains the Docker image's liveness endpoint.
+- `GET /api/health` separates the existing AWS probes without changing CDK: a loopback request from the ECS container is treated as liveness, while a remote request from the load balancer checks the configured Polygon contract plus the active product-key store. The integrated readiness path performs a rolled-back SQLite write so a read-only, locked, or unavailable volume stops new traffic before wallet verification fails; Vercel always checks Redis. A dependency or configuration failure returns HTTP `500` with `{ "error": "The product-key service could not complete the request. Try again shortly." }`.
 - `POST /api/auth/challenge` accepts `{ "address": "0x..." }` and returns `{ "challengeId", "address", "message", "expiresAt" }`. The short-lived message is what the wallet signs. Wallet-verification requests are rate limited.
 - `POST /api/keys/redeem` accepts `{ "challengeId": "...", "address": "0x...", "signature": "0x..." }`. It returns `{ "productKey": "...", "existing": false }` for a new assignment or `existing: true` for the stable key already assigned to that approved wallet.
 - `POST /api/admin/keys` accepts `{ "keys": ["..."] }` plus `Authorization: Bearer <ADMIN_TOKEN>` and returns `{ "inserted", "inventory" }`. It rejects empty values and keys over 256 characters, and imports at most 1,000 keys per request.
@@ -139,7 +139,7 @@ Runtime configuration is shared unless noted: the Upstash, Redis-encryption, Red
 | `RPC_TIMEOUT_MS` | Timeout for an upstream Polygon verification request; defaults to `10000`. |
 | `VERIFICATION_MAX_CONCURRENT` | Maximum simultaneous on-chain entitlement checks; defaults to `8`. |
 | `VERIFICATION_MAX_QUEUED` | Maximum checks waiting for capacity; defaults to `32`. |
-| `HEALTH_CHECK_TTL_MS` | Cache duration for successful Redis/RPC readiness checks; defaults to `10000`. |
+| `HEALTH_CHECK_TTL_MS` | Cache duration for successful storage/RPC readiness checks; defaults to `10000`. |
 | `RATE_LIMIT_WINDOW_MS` | Shared Redis rate-limit window; defaults to ten minutes. |
 | `RATE_LIMIT_MAX` | Wallet-verification requests allowed per client/window; defaults to `60`. |
 | `PORT` | Local HTTP listen port; defaults to `4173`. |
@@ -163,19 +163,19 @@ The integrated process bounds its local rate-limit and challenge stores. Vercel 
 
 ### AWS container deployment
 
-The root `Dockerfile` packages the landing page and product-key service into one non-root Node.js image. Use `.env.docker.example` for the local check above. `.env.aws.example` is the AWS Amoy rehearsal template; it intentionally contains no RPC credential or administrator token. Before publishing the image to Amazon ECR, verify both `curl --fail http://127.0.0.1:4173/api/live` and `curl --fail http://127.0.0.1:4173/api/health` return `{"ok":true}` from the local container. Do not add `.env.docker`, `.env.aws`, or any secret to the image or repository.
+The root `Dockerfile` packages the landing page and product-key service into one non-root Node.js image. The AWS CDK infrastructure and commands are documented in [`cdk/README.md`](cdk/README.md). Use `.env.docker.example` for the local check above. `.env.aws.example` is the AWS Amoy rehearsal template; it intentionally contains no RPC credential or administrator token. The Amoy-only SQLite store uses rollback-journal mode because EFS is a network filesystem and cannot support SQLite WAL safely. Before publishing the image to Amazon ECR, verify both `curl --fail http://127.0.0.1:4173/api/live` and `curl --fail http://127.0.0.1:4173/api/health` return `{"ok":true}` from the local container. Do not add `.env.docker`, `.env.aws`, or any secret to the image or repository.
 
 Recommended first AWS deployment:
 
 1. Push the tested image to a private Amazon ECR repository.
 2. Create an ECS Fargate task exposing container port `4173`. Inject `RPC_URL` and `ADMIN_TOKEN` from AWS Secrets Manager; set the other values from `.env.aws.example` in the task definition.
-3. Mount an encrypted Amazon EFS access point at `/data`. Configure its POSIX owner as UID/GID `1000`, permissions `0700`, and enable transit encryption so the image's non-root `node` user can create the SQLite database.
+3. For the Amoy rehearsal only, mount an encrypted Amazon EFS access point at `/data`. Configure its POSIX owner as UID/GID `1000`, permissions `0700`, and enable transit encryption so the image's non-root `node` user can create the rollback-journal SQLite database. Before the first storage-mode deployment, scale the service to zero, use a one-off maintenance task to run `PRAGMA wal_checkpoint(TRUNCATE)` and `PRAGMA integrity_check`, stop that task, and take an EFS backup. Restore the backup to an isolated path and repeat the integrity check before deploying. Never copy a live database or delete its sidecars.
 4. Put the task in private subnets behind an Application Load Balancer with an ACM HTTPS certificate. Allow task port `4173` only from the load balancer security group. Set `PUBLIC_ORIGIN` to the final `https://` host and `TRUST_PROXY=true`.
-5. Configure the load balancer target-group health check to use readiness endpoint `GET /api/health`. Configure the ECS task-definition container health check to use liveness endpoint `GET /api/live`, matching the Docker image. This removes a task from traffic during a Redis/RPC outage without restarting the otherwise healthy process.
+5. Keep the existing CDK probes unchanged. The ECS task calls `GET /api/health` over loopback, which the integrated server treats as liveness; the load balancer calls the same path remotely and receives full storage/RPC readiness. The Docker image's direct health check remains `GET /api/live`. This removes a task from traffic during a dependency outage without restarting the otherwise healthy process or requiring a platform-infrastructure change.
 6. Keep the service at exactly one desired task for this SQLite/process-local implementation. Set the rolling deployment limits to minimum healthy `0%` and maximum `100%` so old and new tasks do not overlap; this trades a brief deployment interruption for single-writer safety. Do not enable horizontal scaling until challenges, rate limits, and key assignment use shared production storage.
 7. Enable EFS backups, CloudWatch logs, and alarms for unhealthy targets and HTTP `5xx` responses before loading real product keys.
 
-The checked-in `.env.aws.example` still targets Polygon Amoy. For mainnet, deploy the audited contract first, then update `escrow-config.js`, `CONTRACT_ADDRESS`, and `EXPECTED_CHAIN_ID=137` together and rebuild the image. Never reuse the rehearsal administrator token or product-key database.
+The checked-in `.env.aws.example` still targets Polygon Amoy. Do not carry SQLite-on-EFS into the mainnet launch: move inventory, assignments, challenges, and rate limits to a backed-up client/server datastore such as the existing Redis adapter or PostgreSQL, then test migration and recovery. For mainnet, deploy the audited contract first, update `escrow-config.js`, `CONTRACT_ADDRESS`, and `EXPECTED_CHAIN_ID=137` together, and rebuild the image. Never reuse the rehearsal administrator token or product-key database.
 
 ### 4. Publish the release
 

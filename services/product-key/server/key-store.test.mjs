@@ -1,4 +1,8 @@
 import assert from "node:assert/strict";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
 import { KeyStore } from "./key-store.mjs";
 
@@ -68,5 +72,93 @@ test("challenge storage prunes consumed rows and enforces a hard size bound", ()
     assert.ok(store.getChallenge("challenge-4", "0x4"));
   } finally {
     store.close();
+  }
+});
+
+test("file-backed storage migrates WAL to a rollback journal without losing assignments", () => {
+  const directory = mkdtempSync(join(tmpdir(), "pirate-key-store-"));
+  const filename = join(directory, "product-keys.db");
+  try {
+    const legacy = new DatabaseSync(filename);
+    try {
+      legacy.exec(`
+        PRAGMA journal_mode = WAL;
+        CREATE TABLE challenges (
+          challenge_id TEXT PRIMARY KEY,
+          address TEXT NOT NULL COLLATE NOCASE,
+          message TEXT NOT NULL,
+          expires_at INTEGER NOT NULL,
+          used INTEGER NOT NULL DEFAULT 0 CHECK (used IN (0, 1))
+        );
+        CREATE TABLE product_keys (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          product_key TEXT NOT NULL UNIQUE,
+          assigned_to TEXT UNIQUE COLLATE NOCASE,
+          assigned_at INTEGER
+        );
+        INSERT INTO product_keys(product_key, assigned_to, assigned_at)
+        VALUES ('PIRATE-AMOY-PERSISTED', '0xabc', 1000);
+      `);
+    } finally {
+      legacy.close();
+    }
+
+    const store = new KeyStore(filename);
+    try {
+      assert.equal(store.db.prepare("PRAGMA busy_timeout").get().timeout, 3_000);
+      assert.deepEqual(store.assignKey("0xABC", 1_500), {
+        productKey: "PIRATE-AMOY-PERSISTED",
+        existing: true,
+      });
+      const before = store.stats();
+      store.healthCheck(2_000);
+      assert.deepEqual(store.stats(), before, "readiness must not mutate inventory");
+    } finally {
+      store.close();
+    }
+
+    const inspector = new DatabaseSync(filename, { readOnly: true });
+    try {
+      assert.equal(inspector.prepare("PRAGMA journal_mode").get().journal_mode, "delete");
+      assert.equal(
+        inspector.prepare("SELECT challenge_id FROM challenges WHERE challenge_id = '__health_check__'").get(),
+        undefined,
+        "readiness must roll back its probe row",
+      );
+    } finally {
+      inspector.close();
+    }
+
+    const reopened = new KeyStore(filename);
+    try {
+      assert.deepEqual(reopened.assignKey("0xABC", 3_000), {
+        productKey: "PIRATE-AMOY-PERSISTED",
+        existing: true,
+      });
+    } finally {
+      reopened.close();
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("file-backed storage refuses startup while another connection blocks the WAL transition", () => {
+  const directory = mkdtempSync(join(tmpdir(), "pirate-key-store-busy-"));
+  const filename = join(directory, "product-keys.db");
+  const holder = new DatabaseSync(filename);
+  try {
+    holder.exec("PRAGMA journal_mode = WAL; CREATE TABLE lock_test(value); INSERT INTO lock_test VALUES (1); BEGIN");
+    holder.prepare("SELECT value FROM lock_test").all();
+
+    assert.throws(
+      () => new KeyStore(filename),
+      (error) => error?.code === "ERR_SQLITE_ERROR" && error?.errcode === 5,
+      "startup must fail instead of continuing in WAL mode",
+    );
+  } finally {
+    holder.exec("ROLLBACK");
+    holder.close();
+    rmSync(directory, { recursive: true, force: true });
   }
 });

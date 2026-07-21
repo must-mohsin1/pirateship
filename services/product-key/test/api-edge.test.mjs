@@ -81,7 +81,10 @@ test("liveness and readiness requests are handled and unknown routes fall throug
     assert.equal(live.status, 200);
     assert.deepEqual(live.body, { ok: true });
 
-    const health = await request(app.handler, "/api/health", { method: "GET" });
+    const health = await request(app.handler, "/api/health", {
+      method: "GET",
+      remoteAddress: "10.0.0.10",
+    });
     assert.equal(health.handled, true);
     assert.equal(health.status, 200);
     assert.deepEqual(health.body, { ok: true });
@@ -90,6 +93,46 @@ test("liveness and readiness requests are handled and unknown routes fall throug
     assert.equal(unknown.handled, false);
     assert.equal(unknown.status, 0);
   } finally {
+    app.close();
+  }
+});
+
+test("loopback health stays live while remote readiness fails on a storage write", async () => {
+  const storageError = Object.assign(new Error("private database path"), {
+    code: "ERR_SQLITE_ERROR",
+    errcode: 8,
+    errstr: "attempt to write a readonly database",
+  });
+  const store = {
+    healthCheck() {
+      throw storageError;
+    },
+    close() {},
+  };
+  const app = fixture({ store });
+  const originalConsoleError = console.error;
+  console.error = () => {};
+  try {
+    const live = await request(app.handler, "/api/live", { method: "GET" });
+    assert.equal(live.status, 200, "liveness must not restart a healthy process");
+
+    const containerHealth = await request(app.handler, "/api/health", {
+      method: "GET",
+      remoteAddress: "::ffff:127.0.0.1",
+    });
+    assert.equal(containerHealth.status, 200, "the existing ECS loopback probe is liveness");
+
+    const readiness = await request(app.handler, "/api/health", {
+      method: "GET",
+      remoteAddress: "10.0.0.10",
+    });
+    assert.equal(readiness.status, 500);
+    assert.equal(
+      readiness.body.error,
+      "The product-key service could not complete the request. Try again shortly.",
+    );
+  } finally {
+    console.error = originalConsoleError;
     app.close();
   }
 });

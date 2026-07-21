@@ -3,7 +3,25 @@ import { DatabaseSync } from "node:sqlite";
 export class KeyStore {
   constructor(filename = ":memory:", maxChallenges = 10_000) {
     this.db = new DatabaseSync(filename);
-    this.db.exec("PRAGMA journal_mode = WAL");
+    // EFS lock hand-off can take longer than local disk. Retry briefly before
+    // surfacing SQLITE_BUSY so transient contention does not fail a request.
+    this.db.exec("PRAGMA busy_timeout = 3000");
+    // The AWS rehearsal stores this file on EFS. WAL requires shared memory and
+    // is not supported on network filesystems, so use SQLite's rollback journal.
+    let journalMode;
+    try {
+      journalMode = this.db.prepare("PRAGMA journal_mode = DELETE").get()?.journal_mode;
+    } catch (error) {
+      this.db.close();
+      throw error;
+    }
+    if (filename !== ":memory:" && String(journalMode).toLowerCase() !== "delete") {
+      this.db.close();
+      const error = new Error("SQLite rollback journal mode is required for file-backed storage.");
+      error.code = "ERR_SQLITE_ERROR";
+      error.errstr = "rollback journal unavailable";
+      throw error;
+    }
     this.db.exec("PRAGMA foreign_keys = ON");
     const challengeColumns = this.db.prepare("PRAGMA table_info(challenges)").all();
     if (
@@ -84,7 +102,28 @@ export class KeyStore {
       SET assigned_to = ?, assigned_at = ?
       WHERE id = ? AND assigned_to IS NULL
     `);
+    this.healthCheckStatement = this.db.prepare(`
+      INSERT OR REPLACE INTO challenges(challenge_id, address, message, expires_at, used)
+      VALUES ('__health_check__', '__health_check__', '__health_check__', ?, 1)
+    `);
     this.maxChallenges = maxChallenges;
+  }
+
+  healthCheck(now = Date.now()) {
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      // Roll this write back so readiness verifies the real storage path without
+      // accumulating probe rows or changing product-key inventory.
+      this.healthCheckStatement.run(now);
+      this.db.exec("ROLLBACK");
+    } catch (error) {
+      try {
+        this.db.exec("ROLLBACK");
+      } catch {
+        // Preserve the storage error that caused readiness to fail.
+      }
+      throw error;
+    }
   }
 
   putChallenge(challengeId, address, message, expiresAt, now = Date.now()) {

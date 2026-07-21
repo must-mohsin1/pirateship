@@ -2,6 +2,18 @@
 
 All notable changes to Pirate Network are documented in this file.
 
+## [0.2.0.2] - 2026-07-21
+
+### Changed
+
+- Approved supporters now get a clear recovery message when product-key inventory is empty, requests are rate limited, or the service is unavailable, without being told to approve again.
+- AWS health checks now separate process liveness from storage/RPC readiness, so the load balancer stops wallet-verification traffic without restarting a healthy container during a dependency outage.
+
+### Fixed
+
+- The Amoy AWS service now opens its existing SQLite database in an EFS-compatible rollback-journal mode, preserves assigned keys during the transition, and refuses startup if the transition is blocked.
+- SQLite failures now provide allowlisted diagnostic codes in production logs without exposing database paths, SQL, or private error details.
+
 ## [0.2.0.1] - 2026-07-20
 
 ### Changed

@@ -105,6 +105,8 @@ function createHarness({
   failSendResponseAfterBroadcast = false,
   requireChainAdd = false,
   configuredRpcUrls = ["https://rpc-one.example", "https://rpc-two.example"],
+  initialChain = {},
+  productKeyApiFailure = null,
 } = {}) {
   const { elements, steps } = createElements();
   const chain = {
@@ -117,6 +119,7 @@ function createHarness({
     amount: 0n,
     approved: false,
     refunded: false,
+    ...initialChain,
   };
   const calls = { rpcUrls: [], wallet: [], api: [] };
   const walletListeners = new Map();
@@ -166,6 +169,22 @@ function createHarness({
     }
 
     calls.api.push(String(url));
+    if (productKeyApiFailure && productKeyApiFailure.path === url) {
+      if (productKeyApiFailure.networkError) {
+        throw new TypeError("fetch failed");
+      }
+      return {
+        ok: false,
+        status: productKeyApiFailure.status,
+        json: async () => {
+          if (productKeyApiFailure.invalidJson) throw new SyntaxError("invalid JSON");
+          if (Object.hasOwn(productKeyApiFailure, "responseBody")) {
+            return productKeyApiFailure.responseBody;
+          }
+          return { error: productKeyApiFailure.error };
+        },
+      };
+    }
     if (url === "/api/auth/challenge") {
       return {
         ok: true,
@@ -322,6 +341,151 @@ test("supporter and owner complete the mocked Amoy pledge-to-key journey", async
   assert.equal(page.elements["escrow-key-value"].textContent, "PIRATE-AMOY-TEST");
   assert.deepEqual(page.calls.api, ["/api/auth/challenge", "/api/keys/redeem"]);
   assert.equal(page.calls.wallet.some(({ method }) => method === "personal_sign"), true);
+});
+
+test("a product-key API outage fails before signing and explains that approval remains recorded", async () => {
+  const page = createHarness({
+    initialChain: {
+      phase: 1,
+      released: true,
+      proof: "https://example.com/release",
+      totalPledged: MINIMUM,
+      totalApproved: MINIMUM,
+      amount: MINIMUM,
+      approved: true,
+    },
+    productKeyApiFailure: {
+      path: "/api/auth/challenge",
+      status: 500,
+      error: "The product-key service could not complete the request. Try again shortly.",
+    },
+  });
+  await flush();
+  page.elements["escrow-connect"].dispatch("click");
+  await flush();
+  assert.equal(page.elements["escrow-key-panel"].hidden, false);
+
+  page.elements["escrow-key"].dispatch("click");
+  await flush();
+
+  assert.deepEqual(page.calls.api, ["/api/auth/challenge"]);
+  assert.equal(page.calls.wallet.some(({ method }) => method === "personal_sign"), false);
+  assert.match(page.elements["escrow-status"].textContent, /temporarily unavailable/i);
+  assert.match(page.elements["escrow-status"].textContent, /approval is recorded on Polygon/i);
+  assert.match(page.elements["escrow-status"].textContent, /do not need to approve again/i);
+});
+
+test("an unreachable product-key API is not reported as a Polygon RPC problem", async () => {
+  const page = createHarness({
+    initialChain: {
+      phase: 1,
+      released: true,
+      proof: "https://example.com/release",
+      totalPledged: MINIMUM,
+      totalApproved: MINIMUM,
+      amount: MINIMUM,
+      approved: true,
+    },
+    productKeyApiFailure: {
+      path: "/api/auth/challenge",
+      networkError: true,
+    },
+  });
+  await flush();
+  page.elements["escrow-connect"].dispatch("click");
+  await flush();
+
+  page.elements["escrow-key"].dispatch("click");
+  await flush();
+
+  assert.equal(page.calls.wallet.some(({ method }) => method === "personal_sign"), false);
+  assert.match(page.elements["escrow-status"].textContent, /product-key service is temporarily unavailable/i);
+  assert.doesNotMatch(page.elements["escrow-status"].textContent, /Polygon could not be reached/i);
+});
+
+test("product-key rate limiting gives a specific retry message", async () => {
+  const page = createHarness({
+    initialChain: {
+      phase: 1,
+      released: true,
+      proof: "https://example.com/release",
+      totalPledged: MINIMUM,
+      totalApproved: MINIMUM,
+      amount: MINIMUM,
+      approved: true,
+    },
+    productKeyApiFailure: {
+      path: "/api/auth/challenge",
+      status: 429,
+      invalidJson: true,
+    },
+  });
+  await flush();
+  page.elements["escrow-connect"].dispatch("click");
+  await flush();
+
+  page.elements["escrow-key"].dispatch("click");
+  await flush();
+
+  assert.equal(page.calls.wallet.some(({ method }) => method === "personal_sign"), false);
+  assert.match(page.elements["escrow-status"].textContent, /Too many wallet-verification requests/i);
+  assert.match(page.elements["escrow-status"].textContent, /Wait a few minutes/i);
+});
+
+test("a null product-key error body falls back without crashing the client flow", async () => {
+  const page = createHarness({
+    initialChain: {
+      phase: 1,
+      released: true,
+      proof: "https://example.com/release",
+      totalPledged: MINIMUM,
+      totalApproved: MINIMUM,
+      amount: MINIMUM,
+      approved: true,
+    },
+    productKeyApiFailure: {
+      path: "/api/auth/challenge",
+      status: 500,
+      responseBody: null,
+    },
+  });
+  await flush();
+  page.elements["escrow-connect"].dispatch("click");
+  await flush();
+
+  page.elements["escrow-key"].dispatch("click");
+  await flush();
+
+  assert.equal(page.calls.wallet.some(({ method }) => method === "personal_sign"), false);
+  assert.match(page.elements["escrow-status"].textContent, /product-key service is temporarily unavailable/i);
+});
+
+test("empty product-key inventory gives the supporter a specific recovery message", async () => {
+  const page = createHarness({
+    initialChain: {
+      phase: 1,
+      released: true,
+      proof: "https://example.com/release",
+      totalPledged: MINIMUM,
+      totalApproved: MINIMUM,
+      amount: MINIMUM,
+      approved: true,
+    },
+    productKeyApiFailure: {
+      path: "/api/keys/redeem",
+      status: 503,
+      error: "No product keys are available yet. The project owner must add inventory.",
+    },
+  });
+  await flush();
+  page.elements["escrow-connect"].dispatch("click");
+  await flush();
+  page.elements["escrow-key"].dispatch("click");
+  await flush();
+
+  assert.equal(page.calls.wallet.some(({ method }) => method === "personal_sign"), true);
+  assert.match(page.elements["escrow-status"].textContent, /No product keys are available/i);
+  assert.match(page.elements["escrow-status"].textContent, /project owner must add inventory/i);
 });
 
 test("RPC reads recover from a rate-limited primary endpoint", async () => {

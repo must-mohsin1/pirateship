@@ -84,6 +84,8 @@ Update `CONTRACT_ADDRESS`, `VITE_CONTRACT_ADDRESS` if a deployment wrapper needs
 
 ## Gate 6: production canary
 
+Before the canary, replace the Amoy-only SQLite/EFS rehearsal store with a backed-up client/server datastore. Migrate product-key inventory and wallet assignments, then test rollback and recovery. Do not accept real pledges while the product-key service still depends on SQLite over EFS.
+
 Use a separate supporter wallet for one minimum pledge. Confirm the landing page shows the correct pledge and that administrators cannot withdraw it before that supporter approves. Do not mark the product released merely to test mainnet; the exact audited bytecode should already have completed the full lifecycle rehearsal on Amoy.
 
 Finally, enable monitoring for RPC failure, contract events, key inventory, database backups, and the deadline/refund queue. Publish the mainnet address only after the canary, source verification, and service checks are all green.

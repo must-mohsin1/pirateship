@@ -59,6 +59,11 @@ function hasValidAdminToken(request, expected) {
   );
 }
 
+function isLoopbackAddress(address) {
+  const normalized = String(address ?? "").toLowerCase();
+  return ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(normalized);
+}
+
 function challengeMessage({ address, nonce, expiresAt, publicOrigin }) {
   return [
     "HR Launch Escrow",
@@ -224,7 +229,11 @@ export function createApiHandler({
       }
 
       if (request.method === "GET" && url.pathname === "/api/health") {
-        await checkReadiness();
+        // The existing ECS task definition probes /api/health over loopback.
+        // Keep that probe as liveness while remote ALB requests check storage/RPC.
+        if (!isLoopbackAddress(request.socket?.remoteAddress)) {
+          await checkReadiness();
+        }
         sendJson(response, 200, { ok: true });
         return true;
       }

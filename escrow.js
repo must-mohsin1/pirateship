@@ -281,8 +281,32 @@
     button.textContent = label || button.dataset.idleLabel;
   }
 
+  function errorMessage(error) {
+    return String(error && (error.shortMessage || error.reason || error.message) || "");
+  }
+
+  function isNoInventoryError(error) {
+    return Boolean(error && error.isProductKeyApiError && /No product keys are available/i.test(errorMessage(error)));
+  }
+
+  function isProductKeyOutage(error) {
+    return Boolean(error && error.isProductKeyApiError && (error.apiStatus === 0 || error.apiStatus >= 500));
+  }
+
   function friendlyError(error) {
-    var message = String(error && (error.shortMessage || error.reason || error.message) || "");
+    var message = errorMessage(error);
+    if (error && error.isProductKeyApiError) {
+      if (isNoInventoryError(error)) {
+        return "No product keys are available yet. The project owner must add inventory.";
+      }
+      if (error.apiStatus === 429) {
+        return "Too many wallet-verification requests. Wait a few minutes before trying again.";
+      }
+      if (isProductKeyOutage(error)) {
+        return "The product-key service is temporarily unavailable. Your approval is recorded on Polygon; you do not need to approve again. Try retrieving the key later.";
+      }
+      return message || "The product-key service rejected the request.";
+    }
     if (error && (error.code === 4001 || error.code === "ACTION_REJECTED") || /denied|rejected/i.test(message)) {
       return "The wallet request was declined. Review it and try again when ready.";
     }
@@ -681,9 +705,23 @@
 
   async function fetchJson(path, options) {
     var base = String(config.keyApiBase || "").replace(/\/$/, "");
-    var response = await fetch(base + path, options);
+    var response;
+    try {
+      response = await fetch(base + path, options);
+    } catch (cause) {
+      var networkError = new Error("The product-key service could not be reached.", { cause: cause });
+      networkError.apiStatus = 0;
+      networkError.isProductKeyApiError = true;
+      throw networkError;
+    }
     var body = await response.json().catch(function () { return {}; });
-    if (!response.ok) throw new Error(body.error || "The product-key service rejected the request.");
+    if (!response.ok) {
+      var apiError = body && typeof body === "object" ? body.error : "";
+      var error = new Error(apiError || "The product-key service rejected the request.");
+      error.apiStatus = response.status;
+      error.isProductKeyApiError = true;
+      throw error;
+    }
     return body;
   }
 
@@ -726,8 +764,9 @@
       setButton(elements.key, "success", "Key verified");
       setStatus(result.existing ? "Your existing product key was restored." : "A product key was assigned to this approved wallet.", "success");
     } catch (error) {
+      var message = friendlyError(error);
       setButton(elements.key, "error", "Try again");
-      setStatus(friendlyError(error), "error");
+      setStatus(message, "error");
     } finally {
       state.busy = false;
       render();

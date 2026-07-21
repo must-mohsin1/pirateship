@@ -23,9 +23,10 @@ function parseEnvironment(source) {
 }
 
 test("the production image installs only runtime dependencies and runs unprivileged", async () => {
-  const [dockerfile, server, landingPage] = await Promise.all([
+  const [dockerfile, server, keyStore, landingPage] = await Promise.all([
     readRootFile("Dockerfile"),
     readRootFile("services/product-key/server/index.mjs"),
+    readRootFile("services/product-key/server/key-store.mjs"),
     readRootFile("pirate-network-blog.html"),
   ]);
 
@@ -38,6 +39,8 @@ test("the production image installs only runtime dependencies and runs unprivile
   assert.match(dockerfile, /CMD \["node", "services\/product-key\/server\/index\.mjs"\]/);
   assert.doesNotMatch(dockerfile, /ADMIN_TOKEN\s*=/);
   assert.doesNotMatch(dockerfile, /RPC_URL\s*=/);
+  assert.match(keyStore, /PRAGMA journal_mode = DELETE/);
+  assert.doesNotMatch(keyStore, /PRAGMA journal_mode = WAL/);
   assert.match(server, /style-src[^"\n]*https:\/\/fonts\.googleapis\.com/);
   assert.match(server, /font-src[^"\n]*https:\/\/fonts\.gstatic\.com/);
   assert.match(server, /script-src[^"\n]*https:\/\/static\.cloudflareinsights\.com/);
