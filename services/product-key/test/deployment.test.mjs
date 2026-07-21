@@ -23,11 +23,12 @@ function parseEnvironment(source) {
 }
 
 test("the production image installs only runtime dependencies and runs unprivileged", async () => {
-  const [dockerfile, server, keyStore, landingPage] = await Promise.all([
+  const [dockerfile, server, keyStore, landingPage, releaseCriteria] = await Promise.all([
     readRootFile("Dockerfile"),
     readRootFile("services/product-key/server/index.mjs"),
     readRootFile("services/product-key/server/key-store.mjs"),
     readRootFile("pirate-network-blog.html"),
+    readRootFile("mainnet-release-criteria.html"),
   ]);
 
   assert.match(dockerfile, /FROM node:22-bookworm-slim AS dependencies/);
@@ -37,6 +38,7 @@ test("the production image installs only runtime dependencies and runs unprivile
   assert.match(dockerfile, /VOLUME \["\/data"\]/);
   assert.match(dockerfile, /HEALTHCHECK[\s\S]*\/api\/live/);
   assert.match(dockerfile, /CMD \["node", "services\/product-key\/server\/index\.mjs"\]/);
+  assert.match(dockerfile, /COPY pirate-network-blog\.html mainnet-release-criteria\.html/);
   assert.doesNotMatch(dockerfile, /ADMIN_TOKEN\s*=/);
   assert.doesNotMatch(dockerfile, /RPC_URL\s*=/);
   assert.match(keyStore, /PRAGMA journal_mode = DELETE/);
@@ -53,6 +55,10 @@ test("the production image installs only runtime dependencies and runs unprivile
     landingPage,
     /@media \(max-width:560px\)\{[\s\S]*?\.punch::before \{ inset-inline:-22px; \}/,
   );
+  assert.match(landingPage, /href="\/mainnet-release-criteria\.html"/);
+  assert.match(releaseCriteria, /300 POL/);
+  assert.match(releaseCriteria, /Approval is optional and permanent/);
+  assert.match(releaseCriteria, /A refund still requires an on-chain transaction/);
 });
 
 test("the AWS sample is safe and matches the checked-in Amoy browser contract", async () => {

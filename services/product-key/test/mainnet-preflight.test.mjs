@@ -14,6 +14,8 @@ const environment = {
   BENEFICIARY_ADDRESS: BENEFICIARY,
   MINIMUM_PLEDGE_POL: "250",
   OWNER_CUSTODY_MODE: "hardware-wallet",
+  HOT_WALLET_RISK_ACCEPTED: "no",
+  WALLET_RECOVERY_BACKUP_CONFIRMED: "no",
   SECURITY_AUDIT_COMPLETE: "yes",
   AUDIT_REPORT_URL: "https://example.com/security-audit.pdf",
   PRICE_REVIEW_COMPLETE: "yes",
@@ -40,19 +42,76 @@ test("parses immutable campaign terms without accepting secrets", () => {
   assert.equal("PRIVATE_KEY" in parsed, false);
 });
 
+test("defaults omitted Trust Wallet attestations to false for other custody modes", () => {
+  const {
+    HOT_WALLET_RISK_ACCEPTED: _hotWalletRiskAccepted,
+    WALLET_RECOVERY_BACKUP_CONFIRMED: _walletRecoveryBackupConfirmed,
+    ...hardwareWalletEnvironment
+  } = environment;
+  const parsed = parseMainnetPreflightEnvironment(hardwareWalletEnvironment);
+  assert.equal(parsed.hotWalletRiskAccepted, false);
+  assert.equal(parsed.walletRecoveryBackupConfirmed, false);
+});
+
 test("refuses invalid production configuration", () => {
   assert.throws(
     () => parseMainnetPreflightEnvironment({ ...environment, MINIMUM_PLEDGE_POL: "0" }),
     /greater than zero/,
   );
   assert.throws(
-    () => parseMainnetPreflightEnvironment({ ...environment, OWNER_CUSTODY_MODE: "hot-wallet" }),
+    () => parseMainnetPreflightEnvironment({ ...environment, OWNER_CUSTODY_MODE: "browser-extension" }),
     /OWNER_CUSTODY_MODE/,
   );
   assert.throws(
     () => parseMainnetPreflightEnvironment({ ...environment, AUDIT_REPORT_URL: "http://example.com" }),
     /HTTPS/,
   );
+});
+
+test("requires explicit Trust Wallet risk and recovery attestations", async () => {
+  const trustWalletEnvironment = {
+    ...environment,
+    OWNER_CUSTODY_MODE: "trust-wallet-eoa",
+    HOT_WALLET_RISK_ACCEPTED: "yes",
+    WALLET_RECOVERY_BACKUP_CONFIRMED: "yes",
+  };
+  const ready = await runMainnetPreflight({
+    environment: trustWalletEnvironment,
+    providerFactory: () => provider(),
+    gitStateReader: cleanGitState,
+  });
+  assert.equal(ready.status, "READY_FOR_MANUAL_DEPLOYMENT_REVIEW");
+  assert.equal(ready.custody.mode, "trust-wallet-eoa");
+  assert.equal(ready.custody.hotWalletRiskAccepted, true);
+  assert.equal(ready.custody.walletRecoveryBackupConfirmed, true);
+
+  const blocked = await runMainnetPreflight({
+    environment: {
+      ...trustWalletEnvironment,
+      HOT_WALLET_RISK_ACCEPTED: "no",
+      WALLET_RECOVERY_BACKUP_CONFIRMED: "no",
+    },
+    providerFactory: () => provider(),
+    gitStateReader: cleanGitState,
+  });
+  assert.equal(blocked.status, "BLOCKED");
+  assert.match(blocked.blockers.join("\n"), /HOT_WALLET_RISK_ACCEPTED/);
+  assert.match(blocked.blockers.join("\n"), /WALLET_RECOVERY_BACKUP_CONFIRMED/);
+});
+
+test("rejects contract code at a Trust Wallet EOA address", async () => {
+  const result = await runMainnetPreflight({
+    environment: {
+      ...environment,
+      OWNER_CUSTODY_MODE: "trust-wallet-eoa",
+      HOT_WALLET_RISK_ACCEPTED: "yes",
+      WALLET_RECOVERY_BACKUP_CONFIRMED: "yes",
+    },
+    providerFactory: () => provider({ getCode: async () => "0x1234" }),
+    gitStateReader: cleanGitState,
+  });
+  assert.equal(result.status, "BLOCKED");
+  assert.match(result.blockers.join("\n"), /selected EOA deployment address is a contract/);
 });
 
 test("checks Polygon mainnet and reports a ready read-only summary", async () => {

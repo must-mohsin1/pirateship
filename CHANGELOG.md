@@ -2,6 +2,19 @@
 
 All notable changes to Pirate Network are documented in this file.
 
+## [0.3.0.1] - 2026-07-21
+
+### Changed
+
+- Mainnet preflight now records the approved dedicated Trust Wallet EOA as an explicit custody exception instead of misclassifying it as a hardware wallet or multisig.
+- The landing page now links to a public mainnet release-criteria page that defines the usable-product threshold, approval finality, and exact refund transaction requirement.
+- The deployment record now captures the owner's offline recovery-backup attestation and KyungJu Lee's `300 POL` business price approval.
+
+### Security
+
+- Trust Wallet deployment remains blocked until permanent hot-wallet custody risk and an offline recovery backup are explicitly attested; the preflight still accepts no wallet secret and cannot broadcast a transaction.
+- A reviewer-ready independent audit template documents the exact build, threat model, required invariants, and findings format without claiming that an audit has occurred.
+
 ## [0.3.0.0] - 2026-07-21
 
 ### Added

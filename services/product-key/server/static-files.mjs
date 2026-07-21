@@ -4,6 +4,7 @@ import { resolve, sep } from "node:path";
 const ROOT_FILES = new Map([
   ["/", "pirate-network-blog.html"],
   ["/pirate-network-blog.html", "pirate-network-blog.html"],
+  ["/mainnet-release-criteria.html", "mainnet-release-criteria.html"],
   ["/page.js", "page.js"],
   ["/escrow.js", "escrow.js"],
   ["/escrow-config.js", "escrow-config.js"],

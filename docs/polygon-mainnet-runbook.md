@@ -10,7 +10,7 @@ Polygon PoS mainnet uses chain ID `137` and native gas token `POL`. Use a dedica
 
 ## Gate 1: price and release promise
 
-The minimum first pledge is immutable after deployment. The team selected `300 POL`, exactly `300000000000000000000` wei, as the intended mainnet constructor input. Finance/legal must still sign the price review immediately before deployment because native-POL pricing is volatile. Polygon USDC remains deferred.
+The minimum first pledge is immutable after deployment. KyungJu Lee, Lead of the AX Booster Team and AI Engineering, approved `300 POL` on 21 July 2026 as the intended mainnet constructor input, exactly `300000000000000000000` wei. Reconfirm the amount if the launch date changes materially because native-POL pricing is volatile. Polygon USDC remains deferred.
 
 Before deployment, publish one stable HTTPS page that defines all of the following:
 
@@ -21,15 +21,15 @@ Before deployment, publish one stable HTTPS page that defines all of the followi
 - that approval is permanent and releases only that supporter's pledge;
 - that an unapproved pledge becomes refundable after the deadline but still requires someone to submit the on-chain refund transaction.
 
-Finance/legal must mark the price review complete only after agreeing on the POL amount and the user-facing promise.
+The public criteria are prepared at `https://pirateship.must.company/mainnet-release-criteria.html`. That URL counts as published only after the page is merged, deployed, and reachable without authentication. Complete any additional legal review required by company policy before opening the campaign.
 
 ## Gate 2: audit and custody
 
-Obtain an independent Solidity audit against the exact Git commit and compiler configuration intended for deployment: Solidity `0.8.30`, optimizer enabled with `200` runs, and EVM target `paris`.
+Obtain an independent Solidity audit against the exact Git commit and compiler configuration intended for deployment: Solidity `0.8.30`, optimizer enabled with `200` runs, and EVM target `paris`. Give the reviewer [`security-audit-template.md`](security-audit-template.md) as a checklist. The template is not an audit and does not satisfy this gate.
 
-The current contract makes the transaction sender the immutable owner. Therefore the final deployment transaction must originate from the reviewed owner address. For one administrator, that can be a hardware-wallet address. For the requested multi-administrator model, use a reviewed multisig deployment path that makes the multisig itself `msg.sender`, or revise the constructor to accept an explicit owner address and send that revision back through audit. A normal Trust Wallet hot account is not sufficient custody for real customer funds.
+The current contract makes the transaction sender the immutable owner. Therefore the final deployment transaction must originate from the reviewed owner address. A hardware wallet or multisig remains the recommended custody. The project owner selected a dedicated Trust Wallet EOA as an explicit exception for this launch. That exception is accepted only when `HOT_WALLET_RISK_ACCEPTED=yes` and `WALLET_RECOVERY_BACKUP_CONFIRMED=yes`; neither flag substitutes for an independent audit or permits recording a recovery phrase anywhere in the project.
 
-The approved owner/deployer and beneficiary are both `0xcF9178cA7360066B25de9c142A4c155abf151D6f`. Read-only checks on 21 July 2026 found no Polygon mainnet contract code or balance at that address, so initialize and fund the Safe before preflight. Record its signer threshold, signer list, backup/recovery process, and the internal approval policy for `markProductReleased` before deployment.
+The approved owner/deployer and beneficiary are both `0xcF9178cA7360066B25de9c142A4c155abf151D6f`. PolygonScan identified it as an EOA and showed `11.7 POL` after the funding transaction on 21 July 2026. Independently compare the address in Trust Wallet and PolygonScan, confirm Polygon PoS mainnet, record the offline backup procedure and internal approval policy for `markProductReleased`, and sign the final deployment only from this account.
 
 ## Gate 3: run the read-only preflight
 
@@ -46,6 +46,7 @@ The preflight:
 - verifies the RPC reports Polygon chain ID `137`;
 - verifies the deployment wallet has some real POL for gas;
 - checks whether the selected custody mode matches an EOA or contract address;
+- blocks Trust Wallet custody unless permanent hot-wallet risk and offline recovery backup are explicitly attested;
 - converts the proposed pledge to its exact immutable wei value;
 - compiles the checked-in source with the pinned compiler settings and prints a creation-bytecode hash;
 - verifies that `SOURCE_COMMIT` matches the checked-out commit and that the deployment worktree has no local changes;

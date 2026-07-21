@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="The public product-release criteria and supporter terms for the planned Pirate Network refundable Polygon mainnet campaign.">
+<title>Pirate Network — Mainnet release criteria</title>
+<link rel="stylesheet" href="/tokens.css">
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--color-sea); color:var(--color-ink); font-family:var(--font-body); font-size:17px; line-height:1.65; }
+  a { color:var(--color-accent); text-underline-offset:.2em; }
+  a:hover { color:var(--color-accent-strong); }
+  .shell { width:min(820px,calc(100% - 40px)); margin:0 auto; padding:42px 0 80px; }
+  .topline { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:64px; }
+  .brand { color:var(--color-ink); font-size:12px; font-weight:700; letter-spacing:.18em; text-decoration:none; text-transform:uppercase; }
+  .back { font-size:14px; }
+  .eyebrow { margin:0 0 14px; color:var(--color-accent); font-size:12px; font-weight:700; letter-spacing:.15em; text-transform:uppercase; }
+  h1 { max-width:13ch; margin:0; font-family:var(--font-display); font-size:clamp(2.6rem,8vw,5rem); font-weight:600; letter-spacing:-.04em; line-height:.98; text-wrap:balance; }
+  .lede { max-width:62ch; margin:28px 0 0; color:var(--color-neutral); font-size:clamp(1.08rem,2.5vw,1.3rem); }
+  .status { display:grid; grid-template-columns:repeat(3,1fr); margin:42px 0 0; border:1px solid var(--color-edge); border-radius:var(--radius-md); overflow:hidden; }
+  .status div { padding:18px; background:var(--color-paper); }
+  .status div + div { border-left:1px solid var(--color-edge); }
+  .status dt { color:var(--color-label); font-size:11px; font-weight:700; letter-spacing:.11em; text-transform:uppercase; }
+  .status dd { margin:6px 0 0; color:var(--color-ink-bright); font-weight:600; }
+  main { margin-top:56px; }
+  section { margin-top:48px; padding-top:36px; border-top:1px solid var(--color-edge); }
+  h2 { margin:0 0 18px; color:var(--color-accent); font-size:13px; letter-spacing:.14em; text-transform:uppercase; }
+  h3 { margin:28px 0 8px; font-family:var(--font-display); font-size:1.45rem; font-weight:600; }
+  p { margin:12px 0 0; }
+  ol, ul { margin:16px 0 0; padding-left:1.4rem; }
+  li + li { margin-top:12px; }
+  strong { color:var(--color-ink-bright); }
+  .callout { margin-top:24px; padding:22px 24px; border:1px solid var(--color-edge-strong); border-radius:var(--radius-md); background:var(--color-paper); }
+  .callout p:first-child { margin-top:0; }
+  .pending { color:var(--color-label); }
+  footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--color-edge); color:var(--color-label); font-size:14px; }
+  @media (max-width:640px) {
+    .shell { width:min(100% - 28px,820px); padding-top:26px; }
+    .topline { align-items:flex-start; flex-direction:column; margin-bottom:46px; }
+    .status { grid-template-columns:1fr; }
+    .status div + div { border-top:1px solid var(--color-edge); border-left:0; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="topline">
+      <a class="brand" href="/pirate-network-blog.html">Pirate Network · Must Company</a>
+      <a class="back" href="/pirate-network-blog.html#preorder">Return to pre-order rehearsal</a>
+    </div>
+    <p class="eyebrow">Public campaign policy · version 1 · 21 July 2026</p>
+    <h1>Mainnet release criteria</h1>
+    <p class="lede">
+      These are the conditions Pirate Network must satisfy before the escrow owner may record a
+      product release on Polygon mainnet. Supporters should use these conditions when deciding
+      whether to approve their own pledge.
+    </p>
+    <dl class="status" aria-label="Campaign status">
+      <div><dt>Network</dt><dd>Polygon PoS mainnet</dd></div>
+      <div><dt>Minimum first pledge</dt><dd>300 POL</dd></div>
+      <div><dt>Campaign status</dt><dd>Not open yet</dd></div>
+    </dl>
+  </header>
+
+  <main>
+    <section aria-labelledby="release-heading">
+      <h2 id="release-heading">What counts as release</h2>
+      <p>The escrow owner may record release evidence only when every condition below is true:</p>
+      <ol>
+        <li>A public production Pirate Network product is available over HTTPS and is usable by supporters. A landing page, waitlist, mock-up, source repository, announcement, or Product Hunt preview is not enough.</li>
+        <li>An approved supporter can prove control of the approving wallet and retrieve one stable, non-guessable <code>PIRATE-POL-*</code> product key.</li>
+        <li>The released product accepts or validates that key and clearly explains the access it grants.</li>
+        <li>The product, wallet-verification service, dedicated Polygon RPC, shared Redis datastore, backups, monitoring, and support process have passed the production canary.</li>
+        <li>A durable public evidence URL identifies the usable product and its Product Hunt launch. It remains accessible after being recorded on-chain.</li>
+      </ol>
+      <div class="callout">
+        <p><strong>Usable product and release-evidence URL:</strong> <span class="pending">Pending. The campaign will remain closed until it is published and verified.</span></p>
+      </div>
+    </section>
+
+    <section aria-labelledby="supporter-heading">
+      <h2 id="supporter-heading">Supporter terms</h2>
+      <ul>
+        <li>The first pledge from a wallet must be at least <strong>300 POL</strong>. Later top-ups may be smaller while funding remains open.</li>
+        <li>The immutable deadline is exactly <strong>30 days after contract deployment</strong>, measured by the Polygon block timestamp.</li>
+        <li><strong>Approval is optional and permanent.</strong> It releases only that supporter's approved pledge to the beneficiary.</li>
+        <li>Supporters should approve only after reviewing and accepting the usable released product. The team cannot approve for a supporter.</li>
+        <li>If a supporter does not approve, the full funded pledge becomes refundable after the deadline.</li>
+        <li><strong>A refund still requires an on-chain transaction.</strong> The supporter or another caller must submit it, and the contract sends the funds only to the original supporter wallet.</li>
+        <li>Native POL can change substantially in value. Polygon gas fees are separate from the pledge and are not returned by the escrow.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="approval-heading">
+      <h2 id="approval-heading">Approval and product keys</h2>
+      <p>
+        Product-key retrieval appears only after the supporter has approved on-chain and the service
+        has verified a fresh wallet signature. Signing the verification message does not move funds.
+        Approval itself is an on-chain transaction, cannot be undone, and makes that pledge
+        withdrawable by the beneficiary.
+      </p>
+    </section>
+
+    <section aria-labelledby="governance-heading">
+      <h2 id="governance-heading">Published decisions</h2>
+      <p>
+        The <strong>300 POL</strong> minimum was approved on 21 July 2026 by
+        <strong>KyungJu Lee, Lead of the AX Booster Team and AI Engineering</strong>. Because POL is
+        volatile, the project team must re-check the amount immediately before deployment if the
+        launch date changes materially.
+      </p>
+      <p>
+        The mainnet contract address, deployment transaction, deadline, independent audit report,
+        and usable product URL will be added only after each item exists and has been verified.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    This page defines the technical release promise for the planned refundable campaign. It does
+    not claim that the mainnet contract or product has launched. Last updated 21 July 2026.
+  </footer>
+</div>
+</body>
+</html>

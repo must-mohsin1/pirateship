@@ -18,7 +18,7 @@ WORKDIR /app
 COPY --from=dependencies /app/services/product-key/node_modules services/product-key/node_modules
 COPY services/product-key/package.json services/product-key/package-lock.json services/product-key/
 COPY services/product-key/server services/product-key/server
-COPY pirate-network-blog.html page.js escrow-config.js escrow.js tokens.css ./
+COPY pirate-network-blog.html mainnet-release-criteria.html page.js escrow-config.js escrow.js tokens.css ./
 COPY assets assets
 
 RUN install -d -m 0700 -o node -g node /data

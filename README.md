@@ -11,10 +11,13 @@ This repository contains the Pirate Network essay landing page plus a 30-day ref
 - `services/product-key/` — the signed-wallet product-key API, Amoy inventory stores, mainnet unlimited Redis licenses, and automated tests.
 - `api/` — Vercel Function entry points for health, wallet challenges, key redemption, and private inventory administration.
 - `tokens.css` — shared design tokens used by the page.
+- `mainnet-release-criteria.html` — the public promise supporters must review before a real-money pledge or approval.
 
 Release notes are tracked in [`CHANGELOG.md`](CHANGELOG.md). The remaining real-money launch blockers are tracked in [`TODOS.md`](TODOS.md), and the current checkpoint version is stored in [`VERSION`](VERSION).
 
 The step-by-step production gates are documented in [`docs/polygon-mainnet-runbook.md`](docs/polygon-mainnet-runbook.md). The included mainnet preflight is read-only: it validates public addresses, chain ID, review evidence, custody type, gas balance, compiler settings, and the immutable pledge conversion without accepting a private key or sending a transaction.
+
+The prepared mainnet criteria will be published at <https://pirateship.must.company/mainnet-release-criteria.html>. The independent audit is still outstanding; [`docs/security-audit-template.md`](docs/security-audit-template.md) is only a reviewer checklist and must not be represented as an audit report.
 
 ## Resume the Amoy checkpoint
 
@@ -50,7 +53,7 @@ Refund eligibility activates automatically, but a blockchain contract cannot ini
 
 Deploy `contracts/RefundableProductEscrow.sol` to Polygon PoS mainnet only after the intended owner, beneficiary, and minimum pledge have passed an independent security review. The deploying wallet becomes the immutable owner, while the constructor beneficiary is the only wallet allowed to withdraw approved funds. Deployment starts the immutable 30-day clock and spends real POL. The existing `0.01` POL deployment is an Amoy rehearsal only; the approved production constructor input is `300 POL` (`300000000000000000000` wei), subject to the documented finance/legal sign-off.
 
-The intended owner/deployer and beneficiary are both `0xcF9178cA7360066B25de9c142A4c155abf151D6f`. The current verification state and final evidence slots are recorded in [`docs/polygon-mainnet-deployment-record.md`](docs/polygon-mainnet-deployment-record.md). The address must contain initialized Safe contract code on Polygon before deployment.
+The intended owner/deployer and beneficiary are both `0xcF9178cA7360066B25de9c142A4c155abf151D6f`. The current verification state and final evidence slots are recorded in [`docs/polygon-mainnet-deployment-record.md`](docs/polygon-mainnet-deployment-record.md). The project owner selected this funded Trust Wallet EOA as a permanent single-owner exception; preflight requires explicit hot-wallet risk and offline recovery-backup attestations and never accepts the recovery phrase.
 
 Before preparing any deployment transaction, copy `.env.mainnet-preflight.example` to the ignored `.env.mainnet-preflight`, complete the public review fields, and run:
 
@@ -196,7 +199,7 @@ The beneficiary can separately call `withdrawApprovedFunds()` to withdraw only t
 
 - Obtain an independent Solidity security audit before accepting funds.
 - Verify the exact contract source on PolygonScan and link the verified address.
-- Use a multisig or hardware wallet for owner and beneficiary roles.
+- Prefer a multisig or hardware wallet for owner and beneficiary roles. If the approved Trust Wallet exception is used, document the permanent single-owner risk and confirm an offline recovery backup without exposing it.
 - Keep deployer keys, administrator tokens, RPC credentials, and product keys out of this repository.
 - Publish a precise definition of “released” before accepting pre-orders.
 - Explain that approval permanently gives up the refund for that pledge.

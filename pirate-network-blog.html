@@ -386,6 +386,8 @@
   .escrow-copy:disabled { cursor:not-allowed; opacity:.5; }
   .escrow-copy[data-state="success"] { border-color:var(--color-success); color:var(--color-success); }
   .preorder-legal { margin:var(--space-lg) 0 0; color:var(--label); font-size:16px; line-height:1.55; }
+  .preorder-legal a { color:var(--accent); text-underline-offset:.2em; }
+  .preorder-legal a:hover { color:var(--hi); }
 
   @media (min-width:40rem) {
     .escrow-ledger { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -958,6 +960,11 @@
     <p class="preorder-legal" data-ko="현재 화면은 가치가 없는 테스트 POL을 사용하는 폴리곤 Amoy 테스트넷 리허설입니다. 메인넷 자금을 보내지 마세요.">
       This is a Polygon Amoy testnet rehearsal using test POL with no real monetary value. Do not send
       mainnet funds to this contract.
+    </p>
+    <p class="preorder-legal">
+      Planning to support the later mainnet campaign? Read the
+      <a href="/mainnet-release-criteria.html">published release criteria and supporter terms</a>
+      before deciding whether to pledge or approve. The mainnet campaign is not open yet.
     </p>
   </section>
 

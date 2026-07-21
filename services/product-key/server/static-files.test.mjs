@@ -8,6 +8,10 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
 test("serves only the public landing-page allowlist", () => {
   assert.equal(resolvePublicFile(repoRoot, "/"), resolve(repoRoot, "pirate-network-blog.html"));
+  assert.equal(
+    resolvePublicFile(repoRoot, "/mainnet-release-criteria.html"),
+    resolve(repoRoot, "mainnet-release-criteria.html"),
+  );
   assert.equal(resolvePublicFile(repoRoot, "/page.js"), resolve(repoRoot, "page.js"));
   assert.equal(resolvePublicFile(repoRoot, "/escrow.js"), resolve(repoRoot, "escrow.js"));
   assert.equal(

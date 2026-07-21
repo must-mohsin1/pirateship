@@ -18,3 +18,5 @@ product-keys*.json
 coverage/
 dist/
 .hallmark/
+.gstack/
+.gstack/

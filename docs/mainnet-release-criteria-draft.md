@@ -1,6 +1,12 @@
-# Pirate Network mainnet release criteria (draft)
+# Pirate Network mainnet release criteria (source draft)
 
-Status: **team, finance, and legal review required before publishing**.
+Status: **implemented as a public page in `mainnet-release-criteria.html`; deployment pending**.
+
+The intended stable URL is
+`https://pirateship.must.company/mainnet-release-criteria.html`. This Markdown
+file remains the internal source checklist. The public page is the supporter-facing
+version, and its URL counts as published only after it is reachable without
+authentication.
 
 The team may record release evidence in the escrow contract only when all of
 the following statements are true:
@@ -31,7 +37,7 @@ Supporter terms to publish beside these criteria:
   transaction; the contract sends the funds only to the original supporter.
 - Native POL is volatile, and blockchain gas fees are separate from the pledge.
 
-Before publishing, replace this draft status with the approving team and date,
-link the production product and license terms, and have finance/legal approve
-the wording. The final HTTPS URL becomes immutable release evidence once the
-owner records it on chain.
+The `300 POL` business price was approved on 21 July 2026 by KyungJu Lee, Lead
+of the AX Booster Team and AI Engineering. Add the usable production product
+and Product Hunt evidence after they exist. Complete any additional legal review
+required by company policy before opening the mainnet campaign.

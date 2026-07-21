@@ -13,7 +13,11 @@ import {
 import solc from "solc";
 
 export const POLYGON_MAINNET_CHAIN_ID = 137n;
-export const SUPPORTED_CUSTODY_MODES = new Set(["hardware-wallet", "multisig-direct-deployer"]);
+export const SUPPORTED_CUSTODY_MODES = new Set([
+  "hardware-wallet",
+  "multisig-direct-deployer",
+  "trust-wallet-eoa",
+]);
 const execFile = promisify(execFileCallback);
 
 function required(environment, name) {
@@ -59,6 +63,10 @@ export function parseMainnetPreflightEnvironment(environment) {
     minimumPledgeText,
     minimumPledgeWei,
     custodyMode,
+    hotWalletRiskAccepted:
+      environment.HOT_WALLET_RISK_ACCEPTED?.trim()?.toLowerCase() === "yes",
+    walletRecoveryBackupConfirmed:
+      environment.WALLET_RECOVERY_BACKUP_CONFIRMED?.trim()?.toLowerCase() === "yes",
     securityAuditComplete: environment.SECURITY_AUDIT_COMPLETE?.trim().toLowerCase() === "yes",
     auditReportUrl: httpsUrl(environment, "AUDIT_REPORT_URL"),
     priceReviewComplete: environment.PRICE_REVIEW_COMPLETE?.trim().toLowerCase() === "yes",
@@ -142,11 +150,20 @@ export async function runMainnetPreflight({
   }
   if (!gitState.clean) blockers.push("The Git worktree is not clean.");
   if (deployerBalance === 0n) blockers.push("The deployment wallet has no mainnet POL for gas.");
-  if (config.custodyMode === "hardware-wallet" && deployerCode !== "0x") {
-    blockers.push("The hardware-wallet deployment address is a contract, not an EOA.");
+  if (
+    (config.custodyMode === "hardware-wallet" || config.custodyMode === "trust-wallet-eoa") &&
+    deployerCode !== "0x"
+  ) {
+    blockers.push("The selected EOA deployment address is a contract.");
   }
   if (config.custodyMode === "multisig-direct-deployer" && deployerCode === "0x") {
     blockers.push("The multisig deployment address has no contract code.");
+  }
+  if (config.custodyMode === "trust-wallet-eoa" && !config.hotWalletRiskAccepted) {
+    blockers.push("HOT_WALLET_RISK_ACCEPTED is not yes for Trust Wallet custody.");
+  }
+  if (config.custodyMode === "trust-wallet-eoa" && !config.walletRecoveryBackupConfirmed) {
+    blockers.push("WALLET_RECOVERY_BACKUP_CONFIRMED is not yes for Trust Wallet custody.");
   }
 
   return {
@@ -164,6 +181,8 @@ export async function runMainnetPreflight({
     custody: {
       mode: config.custodyMode,
       deployerBalancePol: formatEther(deployerBalance),
+      hotWalletRiskAccepted: config.hotWalletRiskAccepted,
+      walletRecoveryBackupConfirmed: config.walletRecoveryBackupConfirmed,
     },
     review: {
       securityAuditComplete: config.securityAuditComplete,
