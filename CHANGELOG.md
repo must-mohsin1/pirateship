@@ -2,6 +2,22 @@
 
 All notable changes to Pirate Network are documented in this file.
 
+## [0.3.0.0] - 2026-07-21
+
+### Added
+
+- Mainnet generated mode now guarantees one stable `PIRATE-POL-*` license for every approved wallet without finite inventory, using deployment-bound HMAC-SHA-256 generation and encrypted atomic Redis assignments.
+- A no-CDK AWS mainnet environment sample, deployment record, and release-criteria draft capture the approved Safe/beneficiary address, `300 POL` minimum, shared Redis requirements, and remaining launch evidence.
+
+### Changed
+
+- The integrated AWS Node service selects shared Redis instead of SQLite when `PRODUCT_KEY_MODE=generated`, while preserving the existing SQLite and Redis inventory behavior for the Amoy rehearsal.
+- Redis generated mode fingerprints both server secrets and the chain/contract context, rejects namespace reuse or secret drift, and disables inventory uploads.
+
+### Security
+
+- Mainnet preparation now fails closed when the intended Polygon Safe is uninitialized, unfunded, missing audit/price evidence, or checked out from a dirty source tree; no deployment transaction is signed or broadcast by the preflight.
+
 ## [0.2.0.2] - 2026-07-21
 
 ### Changed

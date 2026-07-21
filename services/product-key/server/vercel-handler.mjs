@@ -1,10 +1,9 @@
 import { Readable } from "node:stream";
-import { Redis } from "@upstash/redis";
 import "../../../escrow-config.js";
 import { createApiHandler } from "./app.mjs";
 import { assertPublicDeploymentMatches } from "./config-consistency.mjs";
 import { createContractVerifier } from "./contract-verifier.mjs";
-import { RedisKeyStore } from "./redis-key-store.mjs";
+import { createRedisProductKeyStore } from "./redis-store-factory.mjs";
 import {
   integerEnvironment,
   normalizePublicOrigin,
@@ -98,10 +97,6 @@ export function createProductionProductKeyHandler(environment = process.env) {
     requireEnvironment(environment, "PUBLIC_ORIGIN"),
   );
   const adminToken = requireEnvironment(environment, "ADMIN_TOKEN");
-  const redisUrl = requireEnvironment(environment, "UPSTASH_REDIS_REST_URL");
-  const redisToken = requireEnvironment(environment, "UPSTASH_REDIS_REST_TOKEN");
-  const encryptionKey = requireEnvironment(environment, "PRODUCT_KEY_ENCRYPTION_KEY");
-  const redisTimeoutMs = integerEnvironment(environment, "REDIS_TIMEOUT_MS", "5000");
   const rpcTimeoutMs = integerEnvironment(environment, "RPC_TIMEOUT_MS", "10000");
   const verificationMaxConcurrent = integerEnvironment(
     environment,
@@ -125,17 +120,10 @@ export function createProductionProductKeyHandler(environment = process.env) {
     "HEALTH_CHECK_TTL_MS",
     "10000",
   );
-  const redis = new Redis({
-    url: redisUrl,
-    token: redisToken,
-    signal: () => AbortSignal.timeout(redisTimeoutMs),
-  });
-  const store = new RedisKeyStore({
-    redis,
-    encryptionKey,
-    prefix:
-      environment.PRODUCT_KEY_REDIS_PREFIX?.trim() ||
-      `pirate:product-key:${contractAddress.toLowerCase()}`,
+  const store = createRedisProductKeyStore({
+    environment,
+    contractAddress,
+    expectedChainId,
   });
   const verifyEntitlement = createContractVerifier({
     rpcUrl,

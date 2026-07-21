@@ -10,7 +10,7 @@ Polygon PoS mainnet uses chain ID `137` and native gas token `POL`. Use a dedica
 
 ## Gate 1: price and release promise
 
-The minimum first pledge is immutable after deployment. `250 POL` is still a proposal, not an approved price. At an indicative POL price of about `$0.084` on 17 July 2026, it is approximately `$21`; a `$25` pledge would be about `300 POL`, while a `$49` pledge would be about `585 POL`. Recheck the market price immediately before deployment because native-POL pricing is volatile. Polygon USDC remains deferred.
+The minimum first pledge is immutable after deployment. The team selected `300 POL`, exactly `300000000000000000000` wei, as the intended mainnet constructor input. Finance/legal must still sign the price review immediately before deployment because native-POL pricing is volatile. Polygon USDC remains deferred.
 
 Before deployment, publish one stable HTTPS page that defines all of the following:
 
@@ -29,7 +29,7 @@ Obtain an independent Solidity audit against the exact Git commit and compiler c
 
 The current contract makes the transaction sender the immutable owner. Therefore the final deployment transaction must originate from the reviewed owner address. For one administrator, that can be a hardware-wallet address. For the requested multi-administrator model, use a reviewed multisig deployment path that makes the multisig itself `msg.sender`, or revise the constructor to accept an explicit owner address and send that revision back through audit. A normal Trust Wallet hot account is not sufficient custody for real customer funds.
 
-The beneficiary can be a different reviewed hardware-wallet or multisig address. Record the owner, beneficiary, signer threshold, signer list, backup/recovery process, and the internal approval policy for `markProductReleased` before deployment.
+The approved owner/deployer and beneficiary are both `0xcF9178cA7360066B25de9c142A4c155abf151D6f`. Read-only checks on 21 July 2026 found no Polygon mainnet contract code or balance at that address, so initialize and fund the Safe before preflight. Record its signer threshold, signer list, backup/recovery process, and the internal approval policy for `markProductReleased` before deployment.
 
 ## Gate 3: run the read-only preflight
 
@@ -67,7 +67,7 @@ Two people should independently compare the preflight output against the approve
 
 Only then prepare the wallet transaction. Confirm the wallet itself displays Polygon mainnet, the expected deploying account, and a nonzero real-POL gas fee. Do not deploy from this repository through a raw private key.
 
-Deployment starts the immutable 30-day clock immediately. Schedule it only when the team, release page, monitoring, key inventory, and support coverage are ready.
+Deployment starts the immutable 30-day clock immediately. Schedule it only when the team, release page, monitoring, unlimited-license service, released product validation, and support coverage are ready.
 
 ## Gate 5: verify before publishing
 
@@ -84,8 +84,8 @@ Update `CONTRACT_ADDRESS`, `VITE_CONTRACT_ADDRESS` if a deployment wrapper needs
 
 ## Gate 6: production canary
 
-Before the canary, replace the Amoy-only SQLite/EFS rehearsal store with a backed-up client/server datastore. Migrate product-key inventory and wallet assignments, then test rollback and recovery. Do not accept real pledges while the product-key service still depends on SQLite over EFS.
+Before the canary, deploy the integrated service with `.env.aws-mainnet.example`. `PRODUCT_KEY_MODE=generated` uses shared Redis for assignments, challenges, and rate limits and never opens SQLite. Generate independent encryption and generation secrets, keep them in the deployment secret manager and team recovery process, and test Redis backup/restore plus secret-fingerprint failure handling. The released product must validate the generated `PIRATE-POL-*` licenses.
 
 Use a separate supporter wallet for one minimum pledge. Confirm the landing page shows the correct pledge and that administrators cannot withdraw it before that supporter approves. Do not mark the product released merely to test mainnet; the exact audited bytecode should already have completed the full lifecycle rehearsal on Amoy.
 
-Finally, enable monitoring for RPC failure, contract events, key inventory, database backups, and the deadline/refund queue. Publish the mainnet address only after the canary, source verification, and service checks are all green.
+Finally, enable monitoring for RPC failure, contract events, Redis availability and backups, assignment counts, secret-fingerprint failures, and the deadline/refund queue. Publish the mainnet address only after the canary, source verification, and service checks are all green.

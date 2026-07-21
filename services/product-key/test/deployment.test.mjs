@@ -84,6 +84,23 @@ test("the AWS sample is safe and matches the checked-in Amoy browser contract", 
   assert.match(dockerignore, /^(?:\*\*\/|services\/product-key\/)node_modules$/m);
 });
 
+test("the AWS mainnet sample selects unlimited Redis without embedding secrets", async () => {
+  const environment = parseEnvironment(await readRootFile(".env.aws-mainnet.example"));
+
+  assert.equal(environment.CONTRACT_ADDRESS, "");
+  assert.equal(environment.EXPECTED_CHAIN_ID, "137");
+  assert.equal(environment.PUBLIC_ORIGIN, "https://pirateship.must.company");
+  assert.equal(environment.PRODUCT_KEY_MODE, "generated");
+  assert.equal(environment.PRODUCT_KEY_LICENSE_PREFIX, "PIRATE-POL");
+  assert.equal(environment.PRODUCT_KEY_REDIS_PREFIX, "");
+  assert.equal(environment.UPSTASH_REDIS_REST_URL, "");
+  assert.equal(environment.UPSTASH_REDIS_REST_TOKEN, "");
+  assert.equal(environment.PRODUCT_KEY_ENCRYPTION_KEY, "");
+  assert.equal(environment.PRODUCT_KEY_GENERATION_KEY, "");
+  assert.equal(environment.DATABASE_PATH, undefined);
+  assert.equal(environment.TRUST_PROXY, "true");
+});
+
 test("the Vercel sample pins the public Amoy deployment and request timeouts", async () => {
   const environment = parseEnvironment(await readRootFile(".env.vercel.example"));
   assert.deepEqual(

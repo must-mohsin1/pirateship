@@ -10,7 +10,7 @@
     "serve": "node --env-file=../../.env server/index.mjs",
     "serve:amoy": "node --env-file=../../.env.amoy server/index.mjs",
     "preflight:mainnet": "node --env-file=../../.env.mainnet-preflight scripts/mainnet-preflight.mjs",
-    "check": "node --check ../../page.js && node --check ../../escrow.js && node --check ../../escrow-config.js && node --check server/app.mjs && node --check server/config-consistency.mjs && node --check server/contract-verifier.mjs && node --check server/redis-key-store.mjs && node --check server/runtime-config.mjs && node --check server/safe-log.mjs && node --check server/vercel-handler.mjs && node --check ../../api/health.js && node --check ../../api/auth/challenge.js && node --check ../../api/keys/redeem.js && node --check ../../api/admin/keys.js",
+    "check": "node --check ../../page.js && node --check ../../escrow.js && node --check ../../escrow-config.js && node --check server/app.mjs && node --check server/config-consistency.mjs && node --check server/contract-verifier.mjs && node --check server/redis-key-store.mjs && node --check server/redis-store-factory.mjs && node --check server/runtime-config.mjs && node --check server/safe-log.mjs && node --check server/vercel-handler.mjs && node --check ../../api/health.js && node --check ../../api/auth/challenge.js && node --check ../../api/keys/redeem.js && node --check ../../api/admin/keys.js",
     "test": "node --test test/*.test.mjs server/*.test.mjs",
     "test:contract": "node --test test/RefundableProductEscrow.test.mjs",
     "test:server": "node --test server/*.test.mjs"

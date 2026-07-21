@@ -101,6 +101,22 @@ test("production setup accepts the checked-in Amoy deployment", () => {
   );
 });
 
+test("production setup accepts unlimited generated licenses only with a generation secret", () => {
+  assert.throws(
+    () => createProductionProductKeyHandler(productionEnvironment({
+      PRODUCT_KEY_MODE: "generated",
+    })),
+    /PRODUCT_KEY_GENERATION_KEY is required/,
+  );
+  assert.equal(
+    typeof createProductionProductKeyHandler(productionEnvironment({
+      PRODUCT_KEY_MODE: "generated",
+      PRODUCT_KEY_GENERATION_KEY: Buffer.alloc(32, 8).toString("base64"),
+    })),
+    "function",
+  );
+});
+
 test("production setup rejects contract or chain drift from the landing page", () => {
   assert.throws(
     () => createProductionProductKeyHandler(productionEnvironment({
