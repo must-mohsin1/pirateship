@@ -6,7 +6,6 @@ globalThis.PIRATE_ESCROW_CONFIG = Object.freeze({
   chainName: "Polygon Amoy",
   nativeSymbol: "POL",
   rpcUrls: [
-    "https://rpc-amoy.polygon.technology/",
     "https://polygon-amoy.drpc.org",
   ],
   explorerUrl: "https://amoy.polygonscan.com",

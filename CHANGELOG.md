@@ -2,6 +2,17 @@
 
 All notable changes to Pirate Network are documented in this file.
 
+## [0.2.0.1] - 2026-07-20
+
+### Changed
+
+- The Amoy rehearsal now uses Polygon's current public dRPC endpoint when reading escrow state or helping a wallet add the network.
+
+### Fixed
+
+- The AWS-served landing page now permits its intended Google font and Cloudflare Insights resources without weakening the remaining content security policy.
+- The mobile story section no longer creates horizontal page overflow at compact viewport widths.
+
 ## [0.2.0.0] - 2026-07-20
 
 ### Added

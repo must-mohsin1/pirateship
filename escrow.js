@@ -5,7 +5,7 @@
   if (!root) return;
 
   var ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-  var PENDING_STORAGE_KEY = "pirate-escrow-pending-v1";
+  var PENDING_STORAGE_SLOT = "pirate-escrow-pending-v1";
   var SELECTORS = {
     owner: "0x8da5cb5b",
     deadline: "0x29dcb0cf",
@@ -116,21 +116,21 @@
   function savePendingTransaction(pending) {
     state.pendingTransaction = pending;
     try {
-      window.localStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(pending));
+      window.localStorage.setItem(PENDING_STORAGE_SLOT, JSON.stringify(pending));
     } catch (_) {}
   }
 
   function clearPendingTransaction() {
     state.pendingTransaction = null;
     try {
-      window.localStorage.removeItem(PENDING_STORAGE_KEY);
+      window.localStorage.removeItem(PENDING_STORAGE_SLOT);
     } catch (_) {}
   }
 
   function restorePendingTransaction() {
     if (!state.account) return;
     try {
-      var pending = JSON.parse(window.localStorage.getItem(PENDING_STORAGE_KEY) || "null");
+      var pending = JSON.parse(window.localStorage.getItem(PENDING_STORAGE_SLOT) || "null");
       if (
         pending &&
         pending.account &&

@@ -99,9 +99,12 @@ function createElements() {
 function createHarness({
   withWallet = true,
   failFirstRpc = false,
+  failAllRpc = false,
   failAfterTransaction = false,
   failRefreshAfterReceipt = false,
   failSendResponseAfterBroadcast = false,
+  requireChainAdd = false,
+  configuredRpcUrls = ["https://rpc-one.example", "https://rpc-two.example"],
 } = {}) {
   const { elements, steps } = createElements();
   const chain = {
@@ -135,6 +138,9 @@ function createHarness({
   async function fetch(url, options = {}) {
     if (String(url).startsWith("http")) {
       calls.rpcUrls.push(String(url));
+      if (failAllRpc) {
+        return { ok: false, status: 503, json: async () => ({}) };
+      }
       if ((failAfterTransaction || failRefreshAfterReceipt) && transactionSubmitted) {
         return { ok: false, status: 429, json: async () => ({}) };
       }
@@ -182,7 +188,11 @@ function createHarness({
     on: (name, listener) => walletListeners.set(name, listener),
     request: async ({ method, params = [] }) => {
       calls.wallet.push({ method, params });
-      if (method === "eth_chainId") return "0x13882";
+      if (method === "eth_chainId") return requireChainAdd ? "0x1" : "0x13882";
+      if (method === "wallet_switchEthereumChain" && requireChainAdd) {
+        throw Object.assign(new Error("unknown chain"), { code: 4902 });
+      }
+      if (method === "wallet_addEthereumChain") return null;
       if (method === "eth_requestAccounts") return [ACCOUNT];
       if (method === "eth_getTransactionCount") return transactionSubmitted ? "0x1" : "0x0";
       if (method === "eth_getTransactionReceipt") {
@@ -222,7 +232,7 @@ function createHarness({
       chainName: "Polygon Amoy",
       nativeSymbol: "POL",
       rpcUrl: "https://rpc-one.example",
-      rpcUrls: ["https://rpc-one.example", "https://rpc-two.example"],
+      rpcUrls: configuredRpcUrls,
       explorerUrl: "https://amoy.polygonscan.com",
       keyApiBase: "",
     },
@@ -321,6 +331,41 @@ test("RPC reads recover from a rate-limited primary endpoint", async () => {
   assert.equal(page.calls.rpcUrls.includes("https://rpc-one.example"), true);
   assert.equal(page.calls.rpcUrls.includes("https://rpc-two.example"), true);
   assert.notEqual(page.elements["escrow-status"].dataset.state, "error");
+});
+
+test("a total RPC outage renders a recoverable Polygon error", async () => {
+  const page = createHarness({ failAllRpc: true });
+  await flush();
+
+  assert.equal(page.elements["escrow-phase"].textContent, "RPC unavailable");
+  assert.equal(page.elements["escrow-status"].dataset.state, "error");
+  assert.match(page.elements["escrow-status"].textContent, /Polygon state could not be read/);
+  assert.deepEqual([...new Set(page.calls.rpcUrls)], [
+    "https://rpc-one.example",
+    "https://rpc-two.example",
+  ]);
+});
+
+test("Trust Wallet can add Amoy with the configured active RPC", async () => {
+  const rpcUrl = "https://polygon-amoy.drpc.org";
+  const page = createHarness({
+    requireChainAdd: true,
+    configuredRpcUrls: [rpcUrl],
+  });
+  await flush();
+
+  page.elements["escrow-connect"].dispatch("click");
+  await flush();
+
+  const addChain = page.calls.wallet.find(({ method }) => method === "wallet_addEthereumChain");
+  assert.deepEqual(JSON.parse(JSON.stringify(addChain.params)), [{
+    chainId: "0x13882",
+    chainName: "Polygon Amoy",
+    nativeCurrency: { name: "POL", symbol: "POL", decimals: 18 },
+    rpcUrls: [rpcUrl],
+    blockExplorerUrls: ["https://amoy.polygonscan.com"],
+  }]);
+  assert.equal(page.elements["escrow-wallet"].textContent, "0x1111…1111");
 });
 
 test("a missing wallet and an invalid release URL fail safely without transactions", async () => {

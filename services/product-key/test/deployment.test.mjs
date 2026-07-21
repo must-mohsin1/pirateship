@@ -23,7 +23,11 @@ function parseEnvironment(source) {
 }
 
 test("the production image installs only runtime dependencies and runs unprivileged", async () => {
-  const dockerfile = await readRootFile("Dockerfile");
+  const [dockerfile, server, landingPage] = await Promise.all([
+    readRootFile("Dockerfile"),
+    readRootFile("services/product-key/server/index.mjs"),
+    readRootFile("pirate-network-blog.html"),
+  ]);
 
   assert.match(dockerfile, /FROM node:22-bookworm-slim AS dependencies/);
   assert.match(dockerfile, /npm ci --omit=dev/);
@@ -34,6 +38,18 @@ test("the production image installs only runtime dependencies and runs unprivile
   assert.match(dockerfile, /CMD \["node", "services\/product-key\/server\/index\.mjs"\]/);
   assert.doesNotMatch(dockerfile, /ADMIN_TOKEN\s*=/);
   assert.doesNotMatch(dockerfile, /RPC_URL\s*=/);
+  assert.match(server, /style-src[^"\n]*https:\/\/fonts\.googleapis\.com/);
+  assert.match(server, /font-src[^"\n]*https:\/\/fonts\.gstatic\.com/);
+  assert.match(server, /script-src[^"\n]*https:\/\/static\.cloudflareinsights\.com/);
+  assert.match(
+    server,
+    /connect-src 'self' " \+ publicEscrowConfig\.rpcUrls\.join\(" "\) \+ " https:\/\/cloudflareinsights\.com/,
+  );
+  assert.doesNotMatch(server, /connect-src 'self' https:;/);
+  assert.match(
+    landingPage,
+    /@media \(max-width:560px\)\{[\s\S]*?\.punch::before \{ inset-inline:-22px; \}/,
+  );
 });
 
 test("the AWS sample is safe and matches the checked-in Amoy browser contract", async () => {

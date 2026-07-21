@@ -33,6 +33,13 @@ test("the public escrow and entitlement verifier cannot silently use different c
 test("the Amoy service example matches public config and HTML has no copied address", () => {
   assert.match(environment, new RegExp(`^CONTRACT_ADDRESS=${AMOY_ADDRESS}$`, "m"));
   assert.doesNotMatch(landingPage, new RegExp(AMOY_ADDRESS, "i"));
+  assert.deepEqual(globalThis.PIRATE_ESCROW_CONFIG.rpcUrls, [
+    "https://polygon-amoy.drpc.org",
+  ]);
+  assert.doesNotMatch(
+    globalThis.PIRATE_ESCROW_CONFIG.rpcUrls.join("\n"),
+    /rpc-amoy\.polygon\.technology/,
+  );
 });
 
 test("the backend deployment must match the public contract and chain", () => {

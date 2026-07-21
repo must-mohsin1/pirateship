@@ -117,7 +117,7 @@ function serveStatic(request, response) {
     "Content-Type": contentTypes[extname(filename)] ?? "application/octet-stream",
     "Cache-Control": filename.endsWith("escrow-config.js") ? "no-store" : "no-cache",
     "Content-Security-Policy":
-      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https:; img-src 'self' data:; media-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+      "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' " + publicEscrowConfig.rpcUrls.join(" ") + " https://cloudflareinsights.com; img-src 'self' data:; media-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "X-Content-Type-Options": "nosniff",
   });
